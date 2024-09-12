@@ -26,4 +26,8 @@ typedef int32_t cxu_sctx_t;      // per state
 cx_index_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_index_t ucx_index);
 void cx_close(cx_index_t cx_index);
 
+int cx_error_read(void);
+void cx_error_clear(void);
+void cx_sel(cx_index_t);
+
 #endif

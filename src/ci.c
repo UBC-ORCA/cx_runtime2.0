@@ -71,7 +71,7 @@ cx_virt_data_t *get_virtual_state(state_info_t *head, int32_t virt_addr)
     return NULL;
 }
 
-
+/*
 void cx_sel(cx_index_t cx_index) {
     cx_idx_t prev_cx_idx = {.idx = cx_csr_read(CX_INDEX)};
     cx_idx_t new_cx_idx = {.idx = cx_index};
@@ -93,8 +93,8 @@ void cx_sel(cx_index_t cx_index) {
       prev_cx_idx.sel.state_id == new_cx_idx.sel.state_id) {
         cx_csr_write(CX_INDEX, new_cx_idx.idx);
     }
-
 }
+*/
 
 int32_t cx_init()
 {
@@ -141,4 +141,16 @@ void cx_close(cx_index_t cx_index) {
     :  "r"  (cx_index)  
     : 
   );
+}
+
+void cx_sel(cx_index_t cx_index) {
+    return cx_csr_write(CX_INDEX, cx_index);
+}
+
+void cx_error_clear() {
+    return;
+}
+
+int cx_error_read() {
+    return 0;
 }
