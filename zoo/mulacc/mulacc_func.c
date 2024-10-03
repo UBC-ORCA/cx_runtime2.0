@@ -6,13 +6,13 @@
 static int acc[CX_MULACC_NUM_STATES];
 
 static const cx_stctxs_t initial_status_word = {.sel = {.cs = CX_INITIAL,
-                                                        .initializer = CX_HW_INIT,
+                                                        .initializer = CX_OS_INIT,
                                                         .state_size = 1,
                                                         .reserved0 = 0,
                                                         .error = 0}};
 
 static const cx_stctxs_t off_status_word = {.sel = {.cs = CX_OFF,
-                                                        .initializer = CX_HW_INIT,
+                                                        .initializer = CX_OS_INIT,
                                                         .state_size = 1,
                                                         .reserved0 = 0,
                                                         .error = 0}};

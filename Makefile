@@ -17,11 +17,14 @@ QEMU-LDIR := $(QEMU-BDIR)/lib
 ZOO-DIR := zoo
 
 cx_objects := $(BDIR)/ci.o
+cx_objects_m := $(BDIR)/ci_m.o
 qemu_objects := $(QEMU-BDIR)/exports.o
 cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o
 cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o 
 
 all: $(QEMU-LDIR)/libcx_index.so $(LDIR)/libci.a
+
+machine: $(LDIR)/libci_m.a $(QEMU-LDIR)/libcx_index.so
 
 ########### Building the library QEMU needs ###########
 
@@ -51,7 +54,6 @@ $(QEMU-BDIR)/p-ext_func.o : $(ZOO-DIR)/p-ext/p-ext_func.c | $(QEMU-LDIR)
 
 ########### Building Extension Object Files ###########
 
-
 $(BDIR)/addsub.o: $(ZOO-DIR)/addsub/addsub.c $(ZOO-DIR)/addsub/addsub.h | $(BDIR)
 	$(CC) -c $< -o $@
 
@@ -69,8 +71,8 @@ $(BDIR):
 
 ########### Building Extension Library ###########
 
-# $(LDIR)/libci_m.a: $(cx_objects_m) $(cx_libraries) | $(LDIR)
-# 	$(AR) -rcs $@ $(cx_objects_m) $(cx_libraries)
+$(LDIR)/libci_m.a: $(cx_objects_m) $(cx_libraries) | $(LDIR)
+	$(AR) -rcs $@ $(cx_objects_m) $(cx_libraries)
 
 $(LDIR)/libci.a: $(cx_objects) $(cx_libraries) | $(LDIR)
 	$(AR) -rcs $@ $(cx_objects) $(cx_libraries)
