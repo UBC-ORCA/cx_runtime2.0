@@ -23,7 +23,7 @@
     #define CX_STATUS     0x801
 #endif 
 
-#define NUM_CXUS 4
+#define NUM_CXUS 5
 
 typedef unsigned int uint;
 // #define uint unsigned

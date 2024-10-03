@@ -10,6 +10,7 @@ pushd home
 # riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/stateless.c -o sl -L `pwd`/../../../build/lib/ -lci
 
 riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/open.c -o open_m -L `pwd`/../../../build/lib/ -lci_m
+riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/vector_test.c -o vector -L `pwd`/../../../build/lib/ -lci_m
 
 popd
 find . -print0 | cpio --null -ov --format=newc | gzip -9 > initramfs.cpio.gz

@@ -11,6 +11,7 @@
 #include "../zoo/muldiv/muldiv_common.h"
 #include "../zoo/addsub/addsub_common.h"
 #include "../zoo/p-ext/p-ext_common.h"
+#include "../zoo/vector/vector_common.h"
 
 #define CX_AVAIL_STATE 1
 #define CX_UNAVAIL_STATE 0
@@ -131,11 +132,14 @@ void cx_init() {
     cx_map[1].cx_guid = CX_GUID_ADDSUB;
     cx_map[2].cx_guid = CX_GUID_MULACC;
     cx_map[3].cx_guid = CX_GUID_PEXT;
+    cx_map[4].cx_guid = CX_GUID_VECTOR;
+
 
     cx_map[0].num_states = CX_MULDIV_NUM_STATES;
     cx_map[1].num_states = CX_ADDSUB_NUM_STATES;
     cx_map[2].num_states = CX_MULACC_NUM_STATES;
     cx_map[3].num_states = CX_PEXT_NUM_STATES;
+    cx_map[4].num_states = CX_VECTOR_NUM_STATES;
 
     for (int i = 0; i < NUM_CXUS; i++) {
         cx_map[i].avail_state_ids = malloc(cx_map[i].num_states * sizeof(int));
@@ -224,6 +228,36 @@ static void initialize_state() {
     }
 }
 
+static int alloc_sel(cxu_id_t cxu_id) {
+    cx_state_id_t state_id = get_free_state(cxu_id);
+        
+    if (!is_valid_state_id(cxu_id, state_id)) {
+        return -1;
+    }
+
+    cx_vstate_id_t vstate_id = get_free_vstate(cxu_id, state_id);
+
+    if (vstate_id == -1) {
+        return -1;
+    }
+
+    cx_select_t new_cx_sel = gen_cx_sel(cxu_id, state_id, vstate_id);
+    cx_state_data_t *state = malloc(sizeof(cx_state_data_t));
+    if (!state) {
+        return -1;
+    }
+    
+    state->data = malloc(sizeof(uint) * MAX_STATE_SIZE);
+    if (!state->data) {
+        return -1;
+    }
+
+    state->v_id = vstate_id;
+    list_add(&state->list, &cx_map[cxu_id].state_info[state_id].vstate);
+
+    return new_cx_sel;
+}
+
 static int initialized = 0;
 
 int32_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t user_cx_sel) {
@@ -246,32 +280,10 @@ int32_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t user_cx_sel) {
         return gen_cx_sel(cxu_id, 0, 0);
     } else {
 
-        cx_state_id_t state_id = get_free_state(cxu_id);
-        
-        if (!is_valid_state_id(cxu_id, state_id)) {
+        cx_select_t new_cx_sel = alloc_sel(cxu_id);
+        if (new_cx_sel == -1) {
             return -1;
         }
-
-        /* Need to generate the virtual id */
-        cx_vstate_id_t vstate_id = get_free_vstate(cxu_id, state_id);
-
-        if (vstate_id == -1) {
-            return -1;
-        }
-
-        cx_select_t new_cx_sel = gen_cx_sel(cxu_id, state_id, vstate_id);
-        cx_state_data_t *state = malloc(sizeof(cx_state_data_t));
-        if (!state) {
-            return -1;
-        }
-        
-        state->data = malloc(sizeof(uint) * MAX_STATE_SIZE);
-        if (!state->data) {
-            return -1;
-        }
-
-        state->v_id = vstate_id;
-        list_add(&state->list, &cx_map[cxu_id].state_info[state_id].vstate);
 
         cx_select_t prev_sel = cx_csr_read(CX_INDEX);
         cx_sel(new_cx_sel);
