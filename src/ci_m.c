@@ -326,6 +326,7 @@ void cx_close(cx_select_t cx_sel)
 
     if (is_state_unused(cxu_id, state_id)) {
         cx_map[cxu_id].state_info[state_id].virt = -1;
+        cx_map[cxu_id].state_info[state_id].prev_used_vid = -1;
     }
 
   }
