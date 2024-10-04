@@ -19,8 +19,8 @@ ZOO-DIR := zoo
 cx_objects := $(BDIR)/ci.o
 cx_objects_m := $(BDIR)/ci_m.o
 qemu_objects := $(QEMU-BDIR)/exports.o
-cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o
-cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o
+cx_libraries := $(BDIR)/vector.o
+cx_helpers := $(QEMU-BDIR)/vector_func.o
 
 all: $(QEMU-LDIR)/libcx_index.so $(LDIR)/libci.a
 
@@ -39,17 +39,6 @@ $(QEMU-LDIR):
 
 ########### Building the Extension Functionalities ###########
 
-$(QEMU-BDIR)/addsub_func.o : $(ZOO-DIR)/addsub/addsub_func.c | $(QEMU-LDIR)
-	$(CCX86) -c $< -o $@
-
-$(QEMU-BDIR)/muldiv_func.o : $(ZOO-DIR)/muldiv/muldiv_func.c | $(QEMU-LDIR)
-	$(CCX86) -c $< -o $@
-
-$(QEMU-BDIR)/mulacc_func.o : $(ZOO-DIR)/mulacc/mulacc_func.c | $(QEMU-LDIR)
-	$(CCX86) -c $< -o $@
-
-$(QEMU-BDIR)/p-ext_func.o : $(ZOO-DIR)/p-ext/p-ext_func.c | $(QEMU-LDIR)
-	$(CCX86) -c $< -o $@
 
 $(QEMU-BDIR)/vector_func.o : $(ZOO-DIR)/vector/vector_func.c | $(QEMU-LDIR)
 	$(CCX86) -c $< -o $@
@@ -57,17 +46,6 @@ $(QEMU-BDIR)/vector_func.o : $(ZOO-DIR)/vector/vector_func.c | $(QEMU-LDIR)
 
 ########### Building Extension Object Files ###########
 
-$(BDIR)/addsub.o: $(ZOO-DIR)/addsub/addsub.c $(ZOO-DIR)/addsub/addsub.h | $(BDIR)
-	$(CC) -c $< -o $@
-
-$(BDIR)/muldiv.o: $(ZOO-DIR)/muldiv/muldiv.c $(ZOO-DIR)/muldiv/muldiv.h | $(BDIR)
-	$(CC) -c $< -o $@
-
-$(BDIR)/mulacc.o: $(ZOO-DIR)/mulacc/mulacc.c $(ZOO-DIR)/mulacc/mulacc.h | $(BDIR)
-	$(CC) -c $< -o $@
-
-$(BDIR)/p-ext.o: $(ZOO-DIR)/p-ext/p-ext.c $(ZOO-DIR)/p-ext/p-ext.h | $(BDIR)
-	$(CC) -c $< -o $@
 
 $(BDIR)/vector.o: $(ZOO-DIR)/vector/vector.c $(ZOO-DIR)/vector/vector.h | $(BDIR)
 	$(CC) -c $< -o $@

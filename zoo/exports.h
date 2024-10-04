@@ -4,10 +4,6 @@
 #include <stdint.h>
 
 #include "../include/utils.h"
-#include "addsub/addsub_func.h"
-#include "muldiv/muldiv_func.h"
-#include "mulacc/mulacc_func.h"
-#include "p-ext/p-ext_func.h"
 #include "vector/vector_func.h"
 
 
