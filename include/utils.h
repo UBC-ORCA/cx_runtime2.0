@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define QEMU
 #ifdef QEMU
     #define MCX_ENABLE0  0x018 // CXU 0, STATE_ID 0-16; CXU 1, STATE_ID 0-16
     #define MCX_ENABLE1  0x019 // CXU 2, STATE_ID 0-16; CXU 3, STATE_ID 0-16
@@ -19,7 +18,8 @@
     #define MCX_ENABLE2  0x014
     #define MCX_ENABLE3  0x015
 
-    #define CX_INDEX      0x800 
+    #define MCX_SELECTOR  0xBC0
+    #define CX_INDEX      0xBC0
     #define CX_STATUS     0x801
 #endif 
 
@@ -43,16 +43,16 @@ typedef unsigned int uint;
 
 /* CX_INDEX */
 #define CX_CXU_ID_START_INDEX 0
-#define CX_CXU_ID_BITS 4
-
-#define CX_STATE_ID_START_INDEX 4
-#define CX_STATE_ID_BITS 4
+#define CX_CXU_ID_BITS 8
 
 #define CX_VIRT_STATE_START_INDEX 8
 #define CX_VIRT_STATE_BITS 8
 
-#define CX_ENABLE_START_INDEX 31
-#define CX_ENABLE_BITS 1
+#define CX_STATE_ID_START_INDEX 16
+#define CX_STATE_ID_BITS 8
+
+#define CX_ENABLE_START_INDEX 28
+#define CX_ENABLE_BITS 3
 
 /* CX_STATUS */
 #define CX_IS_BITS 1
@@ -135,10 +135,10 @@ typedef enum {
 typedef union {
     struct {
         uint cxu_id     : CX_CXU_ID_BITS;
-        uint state_id   : CX_STATE_ID_BITS;
         uint v_state_id : CX_VIRT_STATE_BITS;
-        uint reserved0  : 32 - CX_CXU_ID_BITS - CX_STATE_ID_BITS - CX_VIRT_STATE_BITS - CX_ENABLE_BITS;
-        uint en     : CX_ENABLE_BITS;
+        uint state_id   : CX_STATE_ID_BITS;
+        uint reserved0  : 5;
+        uint en         : 3;
     } sel;
         uint idx;
  } cx_idx_t;
