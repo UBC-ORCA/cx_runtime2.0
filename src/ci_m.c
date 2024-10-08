@@ -36,12 +36,34 @@ typedef struct {
   int num_states;
 
   // dynamic
-  int *avail_state_ids;
-  cx_state_info_t *state_info;
+  int avail_state_ids[CX_VECTOR_NUM_STATES];
+  cx_state_info_t state_info[CX_VECTOR_NUM_STATES];
 } cx_entry_m_t;
 
 typedef cx_entry_m_t cx_map_t;
-cx_map_t cx_map[NUM_CXUS];
+cx_map_t cx_map[NUM_CXUS] = {{.cx_guid = CX_GUID_VECTOR,
+                              .num_states = CX_VECTOR_NUM_STATES,
+                              .state_info[0] = {
+                                    .vcounter = 0,
+                                    .virt = -1,
+                                    .prev_used_vid = -1,
+                                    .vstate_id[0] = 0,
+                                    .vstate_id[1] = 0,
+                                    .vstate_id[2] = 0,
+                                    .vstate_id[3] = 0,
+                              },
+                              .state_info[1] = {
+                                    .vcounter = 0,
+                                    .virt = -1,
+                                    .prev_used_vid = -1,
+                                    .vstate_id[0] = 0,
+                                    .vstate_id[1] = 0,
+                                    .vstate_id[2] = 0,
+                                    .vstate_id[3] = 0,
+                              },
+}};
+
+// INIT_LIST_HEAD(&cx_map[0].state_info[0].vstate);
 
 static inline cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id, 
                                      cx_vstate_id_t vstate_id) 
@@ -124,21 +146,16 @@ void cx_init() {
     // 0 initialize the cx_status csr
     cx_csr_write(CX_STATUS, 0);
 
-    cx_map[0].cx_guid = CX_GUID_VECTOR;
-    cx_map[0].num_states = CX_VECTOR_NUM_STATES;
-
     for (int i = 0; i < NUM_CXUS; i++) {
-        cx_map[i].avail_state_ids = malloc(cx_map[i].num_states * sizeof(int));
-        cx_map[i].state_info = malloc(cx_map[i].num_states * sizeof(cx_state_info_t));
         for (int j = 0; j < cx_map[i].num_states; j++) {
             INIT_LIST_HEAD(&cx_map[i].state_info[j].vstate);
-            cx_map[i].avail_state_ids[j] = 1;
-            cx_map[i].state_info[j].virt = -1;
-            cx_map[i].state_info[j].vcounter = 0;
-            cx_map[i].state_info[j].prev_used_vid = -1;
-            for (int k = 0; k < 4; k++) {
-                cx_map[i].state_info[j].vstate_id[k] = 0;
-            }
+            // cx_map[i].avail_state_ids[j] = 1;
+            // cx_map[i].state_info[j].virt = -1;
+            // cx_map[i].state_info[j].vcounter = 0;
+            // cx_map[i].state_info[j].prev_used_vid = -1;
+            // for (int k = 0; k < 4; k++) {
+            //     cx_map[i].state_info[j].vstate_id[k] = 0;
+            // }
         }
     }
 }
