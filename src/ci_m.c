@@ -5,7 +5,6 @@
 
 #include "../include/ci.h"
 #include "../include/utils.h"
-#include "../include/list.h"
 
 #include "../zoo/vector/vector_common.h"
 
@@ -16,7 +15,7 @@ typedef struct cx_state_data_t {
     int status;
     int v_id;
     uint *data;
-    struct list_head list;
+    struct cx_state_data_t *next;
 } cx_state_data_t;
 
 typedef struct cx_state_info_t {
@@ -24,7 +23,7 @@ typedef struct cx_state_info_t {
     // when the counter is 0, we can set the CX_VIRT_T. Until it becomes
     // 0'ed again, we must respect that all newly opened virtual
     // contexts are of the same virt type, or else the cx_open will fail.
-    struct list_head vstate;
+    cx_state_data_t *vstate;
     uint vstate_id[4]; // 128 virtual IDs per state context.
     int vcounter;
     int prev_used_vid; // To know if context save + restore is needed
@@ -63,7 +62,42 @@ cx_map_t cx_map[NUM_CXUS] = {{.cx_guid = CX_GUID_VECTOR,
                               },
 }};
 
-// INIT_LIST_HEAD(&cx_map[0].state_info[0].vstate);
+static void list_add(cx_state_data_t *data, cxu_id_t cxu_id, cx_state_id_t state_id) {
+    cx_state_data_t *curr = cx_map[cxu_id].state_info[state_id].vstate;
+
+    if (curr == NULL) {
+        cx_map[cxu_id].state_info[state_id].vstate = data;
+        return;
+    }
+
+    while (curr->next != NULL) {
+        curr = curr->next;
+    }
+    curr->next = data;
+}
+
+static void list_del(cx_select_t cx_sel) {
+    cx_idx_t cx_sel_ = { .idx = cx_sel };
+    cx_state_data_t *curr = cx_map[cx_sel_.sel.cxu_id].state_info[cx_sel_.sel.state_id].vstate;
+
+    if (curr == NULL) {
+        return;
+    }
+
+    if (curr->v_id == cx_sel_.sel.v_state_id) {
+        cx_map[cx_sel_.sel.cxu_id].state_info[cx_sel_.sel.state_id].vstate = curr->next;
+        free(curr);
+        return;
+    }
+
+    while (curr->next != NULL && curr->next->v_id != cx_sel_.sel.v_state_id) {
+        curr = curr->next;
+    }
+
+    cx_state_data_t *tmp = curr;
+
+
+}
 
 static inline cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id, 
                                      cx_vstate_id_t vstate_id) 
@@ -71,7 +105,7 @@ static inline cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id,
     cx_idx_t cx_sel = {.sel = {   .cxu_id = cxu_id, 
                                   .state_id = state_id,
                                   .v_state_id = vstate_id,
-                                  .en = 1}};
+                                  .version = 1}};
     return cx_sel.idx;
 }
 
@@ -144,11 +178,11 @@ void cx_init() {
     cx_csr_write(CX_INDEX, 0);
     
     // 0 initialize the cx_status csr
-    cx_csr_write(CX_STATUS, 0);
+    // cx_csr_write(CX_STATUS, 0);
 
     for (int i = 0; i < NUM_CXUS; i++) {
         for (int j = 0; j < cx_map[i].num_states; j++) {
-            INIT_LIST_HEAD(&cx_map[i].state_info[j].vstate);
+            cx_map[i].state_info[j].vstate = NULL;
             // cx_map[i].avail_state_ids[j] = 1;
             // cx_map[i].state_info[j].virt = -1;
             // cx_map[i].state_info[j].vcounter = 0;
@@ -198,8 +232,9 @@ void cx_sel(cx_select_t cx_sel) {
     }
 
     // context switching needed
-    cx_state_data_t *new_state_data = NULL, *prev_state_data = NULL, *tmp_state_data = NULL;
-    list_for_each_entry(tmp_state_data, &cx_map[new_sel.sel.cxu_id].state_info[new_sel.sel.state_id].vstate, list) {
+    cx_state_data_t *new_state_data = NULL, *prev_state_data = NULL, 
+                    *tmp_state_data = cx_map[new_sel.sel.cxu_id].state_info[new_sel.sel.state_id].vstate;
+    while (tmp_state_data != NULL) {
         if (tmp_state_data->v_id == prev_used_vid) {
             prev_state_data = tmp_state_data;
         }
@@ -211,6 +246,7 @@ void cx_sel(cx_select_t cx_sel) {
         if (new_state_data && prev_state_data) {
             break;
         }
+        tmp_state_data = tmp_state_data->next;
     }
 
     context_save(prev_state_data);
@@ -260,7 +296,7 @@ static int alloc_sel(cxu_id_t cxu_id) {
     }
 
     state->v_id = vstate_id;
-    list_add(&state->list, &cx_map[cxu_id].state_info[state_id].vstate);
+    list_add(state, cxu_id, state_id);
 
     return new_cx_sel;
 }
@@ -321,13 +357,7 @@ void cx_close(cx_select_t cx_sel)
 
     cx_state_data_t* state_data;
 
-    list_for_each_entry(state_data, &cx_map[cxu_id].state_info[state_id].vstate, list) {
-        if (state_data->v_id == vstate_id) {
-            list_del(&state_data->list);
-            free(state_data->data);
-            break;
-        }
-    }
+    list_del(cx_sel);
 
     free_vstate(cxu_id, state_id, vstate_id);
 
