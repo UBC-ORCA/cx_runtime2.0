@@ -144,7 +144,7 @@ void cx_init() {
 }
 
 void context_save(cx_state_data_t *data) {
-    cxu_sctx_t status = CX_READ_STATUS();
+    uint status = CX_READ_STATUS();
     int size = GET_CX_STATE_SIZE(status);
     for (int i = 0; i < size; i++) {
         data->data[i] = CX_READ_STATE(i);
@@ -169,6 +169,10 @@ void cx_sel(cx_select_t cx_sel) {
     int prev_used_vid = cx_map[new_sel.sel.cxu_id].state_info[new_sel.sel.state_id].prev_used_vid;
 
     cx_csr_write(CX_INDEX, cx_sel);
+
+    if (cx_sel == CX_LEGACY) {
+        return;
+    }
 
     if (prev_used_vid == -1 ||
         new_sel.sel.v_state_id == prev_used_vid) {
@@ -202,7 +206,7 @@ static void initialize_state() {
 
     uint status = CX_READ_STATUS();
     uint sw_init = GET_CX_INITIALIZER(status);
-    CX_WRITE_STATUS(CX_INITIAL);
+    // CX_WRITE_STATUS(CX_INITIAL);
 
     // hw required to set to dirty after init, while sw does it explicitly
     if (sw_init) {
@@ -210,13 +214,13 @@ static void initialize_state() {
         for (int i = 0; i < size; i++) {
             CX_WRITE_STATE(i, 0);
         }
-        CX_WRITE_STATUS(CX_DIRTY);
+        // CX_WRITE_STATUS(CX_DIRTY);
     }
 }
 
 static int alloc_sel(cxu_id_t cxu_id) {
     cx_state_id_t state_id = get_free_state(cxu_id);
-        
+
     if (!is_valid_state_id(cxu_id, state_id)) {
         return -1;
     }

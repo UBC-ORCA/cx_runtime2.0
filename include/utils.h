@@ -18,9 +18,10 @@
     #define MCX_ENABLE2  0x014
     #define MCX_ENABLE3  0x015
 
-    #define MCX_SELECTOR  0xBC0
     #define CX_INDEX      0xBC0
     #define CX_STATUS     0x801
+    #define MCX_SELECTOR  0xBC0
+
 #endif 
 
 #define NUM_CXUS 1
@@ -115,7 +116,7 @@ typedef unsigned int uint;
 #define MAX_NUM_CXUS   (1 << CX_CXU_ID_BITS)
 #define MAX_CF_IDS    (1 << 10)
 
-#define MAX_STATE_SIZE 1024 // number of words in a state
+#define MAX_STATE_SIZE 2048 // number of words in a state
 #define CX_LEGACY 0
 
 #define UNASSIGNED_VIRT -1
