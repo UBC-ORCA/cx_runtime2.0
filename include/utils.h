@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define QEMU
+// #define QEMU
 #ifdef QEMU
     #define MCX_ENABLE0  0x018 // CXU 0, STATE_ID 0-16; CXU 1, STATE_ID 0-16
     #define MCX_ENABLE1  0x019 // CXU 2, STATE_ID 0-16; CXU 3, STATE_ID 0-16
