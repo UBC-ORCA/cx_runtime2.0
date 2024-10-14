@@ -13,16 +13,35 @@ int main() {
 
     cx_csr_write(CX_INDEX, CX_LEGACY);
     int cx_sel_C0 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    printf("here\n");
+
     int cx_sel_C1 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    printf("here\n");
+
     int cx_sel_C2 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    printf("here\n");
+
     int cx_sel_C3 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    printf("here\n");
+    int cx_sel_C4 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    int cx_sel_C5 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    int cx_sel_C6 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
+    int cx_sel_C7 = cx_open(CX_GUID_VECTOR, CX_NO_VIRT, -1);
 
     assert ( cx_sel_C0 != -1 );
     assert ( cx_sel_C1 != -1 );
     assert ( cx_sel_C2 != -1 );
     assert ( cx_sel_C3 != -1 );
+    assert ( cx_sel_C4 != -1 );
+    assert ( cx_sel_C5 != -1 );
+    assert ( cx_sel_C6 != -1 );
+    assert ( cx_sel_C7 != -1 );
 
-    printf("cx_sel_0: %08x, cx_sel_1: %08x, cx_sel_2: %08x, cx_sel_3: %08x\n", cx_sel_C0, cx_sel_C1, cx_sel_C2, cx_sel_C3);
+    printf("cx_sel_0: %08x, cx_sel_1: %08x, cx_sel_2: %08x, cx_sel_3: %08x\n",
+            cx_sel_C0, cx_sel_C1, cx_sel_C2, cx_sel_C3);
+
+    printf("cx_sel_4: %08x, cx_sel_5: %08x, cx_sel_6: %08x, cx_sel_7: %08x\n",
+            cx_sel_C4, cx_sel_C5, cx_sel_C6, cx_sel_C7);
 
     cx_sel(cx_sel_C0);
     set_inc(A);

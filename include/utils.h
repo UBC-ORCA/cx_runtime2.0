@@ -25,7 +25,7 @@
 
 #endif 
 
-#define NUM_CXUS 1
+#define NUM_CXUS 2
 
 typedef unsigned int uint;
 // #define uint unsigned

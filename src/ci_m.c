@@ -189,8 +189,8 @@ void cx_init() {
     cx_map[0].cx_guid = CX_GUID_VECTOR;
     cx_map[0].num_states = CX_VECTOR_NUM_STATES;
 
-    // cx_map[1].cx_guid = CX_GUID_VECTOR;
-    // cx_map[1].num_states = CX_VECTOR_NUM_STATES;
+    cx_map[1].cx_guid = CX_GUID_VECTOR;
+    cx_map[1].num_states = CX_VECTOR_NUM_STATES;
 
     for (int i = 0; i < NUM_CXUS; i++) {
         cx_map[i].avail_state_ids = malloc(cx_map[i].num_states * sizeof(int));
@@ -333,6 +333,7 @@ int32_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t user_cx_sel) {
     for (int j = 0; j < NUM_CXUS; j++) {
         if (cx_map[j].cx_guid == cx_guid) {
             cxu_id = j;
+            break;
         }
     }
     
