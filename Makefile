@@ -1,8 +1,8 @@
-.PHONY: clean all qemu
+.PHONY: clean all qemu qemu-libs machine
 
 # CC = ${RISCV}/llvm/build-linux/bin/clang
-CC = ${RISCV}riscv32-unknown-linux-gnu-gcc
-AR = ${RISCV}riscv32-unknown-linux-gnu-ar
+CC = ${RISCV}/riscv32-unknown-linux-gnu-gcc
+AR = ${RISCV}/riscv32-unknown-linux-gnu-ar
 
 CCX86 = gcc
 ARX86 = ar
@@ -22,7 +22,9 @@ qemu_objects := $(QEMU-BDIR)/exports.o
 cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o
 cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o
 
-all: $(QEMU-LDIR)/libcx_index.so $(LDIR)/libci.a
+all: qemu-libs $(LDIR)/libci.a machine
+
+qemu-libs: $(QEMU-LDIR)/libcx_index.so
 
 machine: $(LDIR)/libci_m.a $(QEMU-LDIR)/libcx_index.so
 
