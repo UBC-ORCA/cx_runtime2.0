@@ -4,7 +4,7 @@
 # NOTE: This is a very slow build (2h+) due to gnu toolchain
 #####
 
-pushd $CX2_ROOT/riscv-gnu-toolchain
+pushd $CX2_ROOT/utils/riscv-gnu-toolchain
 git submodule update --init binutils gcc gdb glibc linux-headers newlib dejagnu
 
 if [ $? ne 0 ]; then
@@ -26,7 +26,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Note: changing this to have multiple jobs causes the build to fail
-make
+make linux
 
 if [ $? -ne 0 ]; then
 	echo "issue with building gnu"
