@@ -9,10 +9,16 @@
 
 git clone https://git.busybox.net/busybox
 pushd busybox
-git checkout 1_32_1
+git checkout 1_32_stable
 
 make ARCH=riscv CROSS_COMPILE=riscv32-unknown-linux-gnu- defconfig
 # make ARCH=riscv CROSS_COMPILE=riscv32-unknown-linux-gnu- menuconfig
+
+sed -i 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/g' .config
+
+# LONG_BIT is not always found
+sed -i 's/LONG_BIT/32/g' networking/tls_aesgcm.c
+
 make ARCH=riscv CROSS_COMPILE=riscv32-unknown-linux-gnu- -j $(nproc)
 
 popd
@@ -28,7 +34,7 @@ popd
 
 cp ../busybox/busybox ./bin/
 
-if [$? ne 0]; then
+if [ $? -ne 0 ]; then
     echo "Couldn't find busybox executeable - maybe it was build incorrectly?"
     exit 1
 fi

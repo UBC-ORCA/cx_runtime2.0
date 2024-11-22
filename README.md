@@ -3,16 +3,24 @@ Runnier, Timely-ier, Newer, Table-less, Not a Ninja Sloth
 
 Whenever using this repo, make sure to run `source settings.sh` to configure your environment.
 
-1. run `./utils/build-riscv-gnu.sh`
+1. run `git submodule update --init`
 
-2. run `make all`.
+**Run from utils directory.**
 
-3. run `./utils/build-qemu.sh`
+2. run `./build-riscv-gnu.sh`
 
-4. run `./utils/build-linux.sh`
+**Run from root directory**
 
-5. run `./utils/build-busybox.sh`
+3. run `make all`.
 
-6. run `./utils/build-files.sh`
+**Run all the follow commands from the utils directory.**
 
-Finally, to run QEMU, run `make qemu`. 
+4. run `./build-qemu.sh`
+
+5. run `./build-linux.sh`
+
+6. run `./build-busybox.sh`
+
+7. run `./build-files.sh`
+
+Finally, to run QEMU, run `make qemu` from the root directory. 

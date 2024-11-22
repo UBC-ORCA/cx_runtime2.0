@@ -2,8 +2,8 @@
 
 pushd ..
 
-export LIBRARY_PATH=`pwd`/build-qemu/lib
-export LD_LIBRARY_PATH=`pwd`/build-qemu/lib
+export LIBRARY_PATH=$CX2_ROOT/build-qemu/lib
+export LD_LIBRARY_PATH=$CX2_ROOT/build-qemu/lib
 
 pushd qemu_cx
 
