@@ -151,6 +151,6 @@ void cx_error_clear() {
     return;
 }
 
-int cx_error_read() {
+cx_error_t cx_error_read() {
     return 0;
 }
