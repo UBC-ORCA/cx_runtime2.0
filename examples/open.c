@@ -11,7 +11,7 @@ int main() {
     int result;
 
     // int cx_sel_A = cx_open(CX_GUID_A, share_A);
-    cx_csr_write(CX_INDEX, CX_LEGACY);
+    cx_csr_write(CX_SELECTOR_USER, CX_LEGACY);
     int cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     int cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     int cx_sel_C2 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);

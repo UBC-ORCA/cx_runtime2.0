@@ -122,8 +122,8 @@ static int is_valid_state_id(cxu_id_t cxu_id, cx_state_id_t state_id)
 
 // populates the cx_map
 void cx_init() {
-    // zero the cx_index
-    cx_csr_write(CX_INDEX, 0);
+    // zero the cx_selector_user
+    cx_csr_write(CX_SELECTOR_USER, 0);
     
     // 0 initialize the cx_status csr
     cx_csr_write(CX_STATUS, 0);
@@ -182,7 +182,7 @@ void cx_sel(cx_select_t cx_sel) {
     cx_idx_t new_sel =  { .idx = cx_sel };
     int prev_used_vid = cx_map[new_sel.sel.cxu_id].state_info[new_sel.sel.state_id].prev_used_vid;
 
-    cx_csr_write(CX_INDEX, cx_sel);
+    cx_csr_write(CX_SELECTOR_USER, cx_sel);
 
     if (prev_used_vid == -1 ||
         new_sel.sel.v_state_id == prev_used_vid) {
@@ -285,7 +285,7 @@ int32_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t user_cx_sel) {
             return -1;
         }
 
-        cx_select_t prev_sel = cx_csr_read(CX_INDEX);
+        cx_select_t prev_sel = cx_csr_read(CX_SELECTOR_USER);
         cx_sel(new_cx_sel);
 
         initialize_state();

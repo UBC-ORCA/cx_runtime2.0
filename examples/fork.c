@@ -47,7 +47,7 @@ void test_fork_0() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   pid_t pid = fork(); 
   assert(pid >= 0);
@@ -83,7 +83,7 @@ void test_fork_1() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   pid_t pid = fork();
   assert(pid >= 0);
@@ -126,11 +126,11 @@ void test_fork_2() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   pid_t pid = fork();
 
-  // cx_index = cx_csr_read(CX_INDEX);
+  // cx_select = cx_csr_read(CX_SELECTOR_USER);
   if (pid < 0){ 
     perror("fork fail"); 
     exit(1); 
@@ -186,7 +186,7 @@ void test_fork_3() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   pid_t pid = fork();
 
@@ -194,8 +194,8 @@ void test_fork_3() {
     perror("fork fail"); 
     exit(1); 
   } else if (pid == 0) {
-    cx_index_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C2 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C2 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     assert( cx_sel_C2 != -1 );
 
@@ -222,8 +222,8 @@ void test_fork_3() {
 
     exit(EXIT_SUCCESS);
   } else {
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
     assert( cx_sel_C5 != -1 );
 
@@ -256,7 +256,7 @@ void complex_fork_test() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   int cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
 
@@ -266,7 +266,7 @@ void complex_fork_test() {
   cx_sel(cx_sel_C0);
   result = mac(b, b);
   assert( result == 25 );
-  uint init_mcx_val = cx_csr_read(CX_INDEX);
+  uint init_mcx_val = cx_csr_read(CX_SELECTOR_USER);
   
   cx_error = cx_error_read();
   assert( cx_error == 0 );
@@ -279,8 +279,8 @@ void complex_fork_test() {
     perror("fork fail");
     exit(1);
   } else if (pid == 0) {
-    cx_index_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C2 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C2 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     assert( cx_sel_C2 != -1 );
 
@@ -309,8 +309,8 @@ void complex_fork_test() {
     cx_close(cx_sel_C2);
     exit(EXIT_SUCCESS);
   } else {
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
     assert( cx_sel_C5 != -1 );
 
@@ -349,7 +349,7 @@ void use_prev_opened_in_child() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   int cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
 
@@ -359,7 +359,7 @@ void use_prev_opened_in_child() {
   cx_sel(cx_sel_C0);
   result = mac(b, b);
   assert( result == 25 );
-  uint init_mcx_val = cx_csr_read(CX_INDEX);
+  uint init_mcx_val = cx_csr_read(CX_SELECTOR_USER);
   
   cx_error = cx_error_read();
   assert( cx_error == 0 );
@@ -373,7 +373,7 @@ void use_prev_opened_in_child() {
     exit(1);
   } else if (pid == 0) {
     // child
-    cx_index_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     
     cx_sel(cx_sel_C0);
@@ -393,8 +393,8 @@ void use_prev_opened_in_child() {
 
     exit(EXIT_SUCCESS);
   } else {
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
     assert( cx_sel_C5 != -1 );
 
@@ -433,7 +433,7 @@ void use_prev_opened_in_parent() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   int cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
 
@@ -443,7 +443,7 @@ void use_prev_opened_in_parent() {
   cx_sel(cx_sel_C0);
   result = mac(b, b);
   assert( result == 25 );
-  uint init_mcx_val = cx_csr_read(CX_INDEX);
+  uint init_mcx_val = cx_csr_read(CX_SELECTOR_USER);
   
   cx_error = cx_error_read();
   assert( cx_error == 0 );
@@ -456,8 +456,8 @@ void use_prev_opened_in_parent() {
     perror("fork fail");
     exit(1);
   } else if (pid == 0) {
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
     assert( cx_sel_C5 != -1 );
 
@@ -481,7 +481,7 @@ void use_prev_opened_in_parent() {
     exit(EXIT_SUCCESS);
   } else {
     // child
-    cx_index_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     
     cx_sel(cx_sel_C0);
@@ -517,7 +517,7 @@ void use_prev_opened_in_parent_and_child() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
   int cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
 
@@ -527,7 +527,7 @@ void use_prev_opened_in_parent_and_child() {
   cx_sel(cx_sel_C0);
   result = mac(b, b);
   assert( result == 25 );
-  uint init_mcx_val = cx_csr_read(CX_INDEX);
+  uint init_mcx_val = cx_csr_read(CX_SELECTOR_USER);
   
   cx_error = cx_error_read();
   assert( cx_error == 0 );
@@ -540,8 +540,8 @@ void use_prev_opened_in_parent_and_child() {
     perror("fork fail");
     exit(1);
   } else if (pid == 0) {
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
-    cx_index_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
     assert( cx_sel_C5 != -1 );
 
@@ -575,7 +575,7 @@ void use_prev_opened_in_parent_and_child() {
     exit(EXIT_SUCCESS);
   } else {
     // child
-    cx_index_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     
     cx_sel(cx_sel_C0);
@@ -613,12 +613,12 @@ void close_unclosed_cx() {
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
-  cx_index_t cx_index, cx_index_0;
+  cx_select_t cx_select, cx_select_0;
 
-  cx_index_t cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
+  cx_select_t cx_sel_C0 = cx_open(CX_GUID_MULACC, CX_INTER_VIRT, -1);
   assert(cx_sel_C0 != -1);
 
-  cx_index_t cx_sel_C1;
+  cx_select_t cx_sel_C1;
 
   int *glob_counter;
   glob_counter = mmap(NULL, sizeof *glob_counter, PROT_READ | PROT_WRITE, 
@@ -631,7 +631,7 @@ void close_unclosed_cx() {
     exit(1);
   } else if (pid == 0) {
     // child
-    cx_index_t cx_sel_C4 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     if (cx_sel_C4 != -1)
       *glob_counter += 1;
 
@@ -649,14 +649,14 @@ void close_unclosed_cx() {
     assert(*glob_counter == 1);
     munmap(glob_counter, sizeof *glob_counter);
   }
-  cx_index_t cx_sel_C5 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+  cx_select_t cx_sel_C5 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
   assert( cx_sel_C5 < 0 );
 
   cx_close(cx_sel_C0);
   cx_close(cx_sel_C5);
 
-  cx_index_t cx_sel_C6 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
-  cx_index_t cx_sel_C7 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+  cx_select_t cx_sel_C6 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+  cx_select_t cx_sel_C7 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
 
   assert(cx_sel_C6 != -1);
   assert(cx_sel_C7 != -1);

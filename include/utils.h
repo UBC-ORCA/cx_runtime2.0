@@ -3,23 +3,25 @@
 
 #define QEMU
 #ifdef QEMU
-    #define MCX_ENABLE0  0x018 // CXU 0, STATE_ID 0-16; CXU 1, STATE_ID 0-16
-    #define MCX_ENABLE1  0x019 // CXU 2, STATE_ID 0-16; CXU 3, STATE_ID 0-16
-    #define MCX_ENABLE2  0x01A // CXU 4, STATE_ID 0-16; CXU 5, STATE_ID 0-16
-    #define MCX_ENABLE3  0x01B // CXU 6, STATE_ID 0-16; CXU 7, STATE_ID 0-16
-    #define MCX_ENABLE4  0x01C // CXU 8, STATE_ID 0-16; CXU 9, STATE_ID 0-16
-    #define MCX_ENABLE5  0x01D // CXU 10, STATE_ID 0-16; CXU 11, STATE_ID 0-16
-    #define MCX_ENABLE6  0x01E // CXU 12, STATE_ID 0-16; CXU 13, STATE_ID 0-16
-    #define MCX_ENABLE7  0x01F // CXU 14, STATE_ID 0-16; CXU 15, STATE_ID 0-16    
-    #define CX_INDEX      0x011
-    #define CX_STATUS     0x801
+    #define MCX_ENABLE0       0x018 // CXU 0, STATE_ID 0-16; CXU 1, STATE_ID 0-16
+    #define MCX_ENABLE1       0x019 // CXU 2, STATE_ID 0-16; CXU 3, STATE_ID 0-16
+    #define MCX_ENABLE2       0x01A // CXU 4, STATE_ID 0-16; CXU 5, STATE_ID 0-16
+    #define MCX_ENABLE3       0x01B // CXU 6, STATE_ID 0-16; CXU 7, STATE_ID 0-16
+    #define MCX_ENABLE4       0x01C // CXU 8, STATE_ID 0-16; CXU 9, STATE_ID 0-16
+    #define MCX_ENABLE5       0x01D // CXU 10, STATE_ID 0-16; CXU 11, STATE_ID 0-16
+    #define MCX_ENABLE6       0x01E // CXU 12, STATE_ID 0-16; CXU 13, STATE_ID 0-16
+    #define MCX_ENABLE7       0x01F // CXU 14, STATE_ID 0-16; CXU 15, STATE_ID 0-16    
+    #define CX_SELECTOR_USER  0x011
+    #define CX_STATUS         0x801
 #else
     #define MCX_ENABLE0  0x012
     #define MCX_ENABLE1  0x013
     #define MCX_ENABLE2  0x014
     #define MCX_ENABLE3  0x015
 
-    #define CX_INDEX      0x800 
+    #define CX_SELECTOR_USER      0x800 
+    // #define CX_INDEX      0x800 
+    
     #define CX_STATUS     0x801
 #endif 
 
@@ -41,7 +43,7 @@ typedef unsigned int uint;
 #define CX_HW_INIT 0
 #define CX_OS_INIT 1
 
-/* CX_INDEX */
+/* CX_SELECTOR_USER */
 #define CX_CXU_ID_START_INDEX 0
 #define CX_CXU_ID_BITS 4
 
@@ -80,7 +82,7 @@ typedef unsigned int uint;
 #define GET_BITS(cx_sel, start_bit, n) \
     ((cx_sel >> start_bit) & (((1 << n) - 1) ))
 
-/* CX_INDEX MACROS */
+/* CX_SELECTOR_USER MACROS */
 
 #define CX_GET_CXU_ID(cx_sel) \
     GET_BITS(cx_sel, CX_CXU_ID_START_INDEX, CX_CXU_ID_BITS)

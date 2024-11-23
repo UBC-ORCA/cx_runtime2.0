@@ -28,6 +28,9 @@ typedef struct cxu_info_t {
     int32_t num_states;
 } cxu_info_t;
 
+// virtual selector table
+uint vst[NUM_CXUS][MAX_NUM_STATES];
+
 static cxu_info_t cxu[NUM_CXUS];
 
 // accessed the same way that we access the enable bits
@@ -37,9 +40,9 @@ static cxu_info_t cxu[NUM_CXUS];
 // we do a context switch
 static int8_t cxu_permission_table[MAX_NUM_CXUS * MAX_NUM_STATES];
 
-static inline bool cx_enable_read(cx_idx_t cx_index) {
+static inline bool cx_enable_read(cx_idx_t sel) {
 
-    cxu_id_t cxu_csr = cx_index.sel.cxu_id >> 2;
+    cxu_id_t cxu_csr = sel.sel.cxu_id >> 2;
     uint cx_enable_csr = 0;
 
     if (cxu_csr > 3) {
@@ -50,7 +53,7 @@ static inline bool cx_enable_read(cx_idx_t cx_index) {
         cx_enable_csr = cx_csr_read(MCX_ENABLE0);
     }
     
-    bool enable = GET_BITS(cx_enable_csr, cx_index.sel.state_id, 1);
+    bool enable = GET_BITS(cx_enable_csr, sel.sel.state_id, 1);
     return enable;
 }
 
@@ -71,30 +74,17 @@ cx_virt_data_t *get_virtual_state(state_info_t *head, int32_t virt_addr)
     return NULL;
 }
 
-/*
-void cx_sel(cx_index_t cx_index) {
-    cx_idx_t prev_cx_idx = {.idx = cx_csr_read(CX_INDEX)};
-    cx_idx_t new_cx_idx = {.idx = cx_index};
 
-    if (new_cx_idx.sel.en == CX_LEGACY) {
-        cx_csr_write(CX_INDEX, CX_LEGACY);
-    }
+// void cx_sel(cx_select_t sel) {
+//     // inline this
+//     cx_idx_t prev_cx_idx = {.idx = cx_csr_read(CX_SELECTOR_USER)};
+//     cx_csr_write(CX_SELECTOR_USER, sel);
 
-    bool cx_state_enable = cx_enable_read(new_cx_idx);
+//     // separate this
+//     cx_idx_t new_cx_idx = {.idx = sel};
+//     if (vst[new_cx_idx])
+// }
 
-    if (!cx_state_enable) {
-        // going to have to do some saving and restoring here
-        // If the enable bit is NOT high, we need to save the current state
-        // context, then restore the requested state context.
-    }
-
-    // Virtual change only, acceptable to write without trapping
-    if (prev_cx_idx.sel.cxu_id == new_cx_idx.sel.cxu_id && 
-      prev_cx_idx.sel.state_id == new_cx_idx.sel.state_id) {
-        cx_csr_write(CX_INDEX, new_cx_idx.idx);
-    }
-}
-*/
 
 int32_t cx_init()
 {
@@ -116,21 +106,21 @@ int32_t cx_init()
     }
 }
 
-cx_index_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_index_t ucx_index) {
-    register long cx_index asm("a0");
+cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select) {
+    register long sel asm("a0");
     register long a0 asm("a0") = cx_guid;
     register long a1 asm("a1") = cx_virt;
-    register long a2 asm("a2") = ucx_index;
+    register long a2 asm("a2") = ucx_select;
     register long syscall_id asm("a7") = 457; // cx_open
     asm volatile ("ecall  # 0=%0   1=%1  2=%2  3=%3 4=%4"
-        : "=r"(cx_index)
+        : "=r"(sel)
         : "r"(a0), "r"(a1), "r"(a2), "r"(syscall_id)
         :
     );
-    return cx_index;
+    return sel;
 }
 
-void cx_close(cx_index_t cx_index) {
+void cx_close(cx_select_t sel) {
   int cx_close_error = -1;
   asm volatile (
     "li a7, 458;        \n\t"  // syscall 458, cx_close
@@ -138,13 +128,13 @@ void cx_close(cx_index_t cx_index) {
     "ecall;             \n\t"
     "mv %1, a0;         \n\t"
     :  "=r" (cx_close_error)
-    :  "r"  (cx_index)  
+    :  "r"  (sel)  
     : 
   );
 }
 
-void cx_sel(cx_index_t cx_index) {
-    return cx_csr_write(CX_INDEX, cx_index);
+void cx_sel(cx_select_t sel) {
+    return cx_csr_write(CX_SELECTOR_USER, sel);
 }
 
 void cx_error_clear() {

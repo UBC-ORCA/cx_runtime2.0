@@ -18,11 +18,13 @@ typedef s32 cx_vstate_id_t;  // virtual state id
 typedef s32 cx_state_id_t;   // system: state index
 typedef s32 cx_virt_t;       // context virtualization permissions
 
-typedef s32 cx_index_t;        // hart: CX selector (value (No CX Table) or index
-                               //       (when there is a CX Table))
+// typedef s32 cx_index_t;        // hart: CX selector (value (No CX Table) or index
+//                                //       (when there is a CX Table))
 typedef s32 cx_error_t;     //
 
 typedef s32 cxu_sctx_t;      // per state
 typedef s32 cx_sel_t;        // selector index
+
+typedef s32 cx_select_t;
 
 #endif
