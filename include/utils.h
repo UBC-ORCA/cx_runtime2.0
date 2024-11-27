@@ -47,14 +47,17 @@ typedef unsigned int uint;
 #define CX_CXU_ID_START_INDEX 0
 #define CX_CXU_ID_BITS 4
 
-#define CX_STATE_ID_START_INDEX 4
+#define CX_VIRT_STATE_START_INDEX 10
+#define CX_VIRT_STATE_BITS 6
+
+#define CX_STATE_ID_START_INDEX 16
 #define CX_STATE_ID_BITS 4
 
-#define CX_VIRT_STATE_START_INDEX 8
-#define CX_VIRT_STATE_BITS 8
+#define CX_VER_START_INDEX 28
+#define CX_VER_BITS 3
 
-#define CX_ENABLE_START_INDEX 31
-#define CX_ENABLE_BITS 1
+#define CX_IV_START_INDEX 31
+#define CX_IV_BITS 1
 
 /* CX_STATUS */
 #define CX_IS_BITS 1
@@ -93,8 +96,8 @@ typedef unsigned int uint;
 #define CX_GET_VIRT_STATE_ID(cx_sel) \
     GET_BITS(cx_sel, CX_VIRT_STATE_START_INDEX, CX_VIRT_STATE_BITS)
 
-#define CX_GET_ENABLE(cx_sel) \
-    GET_BITS(cx_sel, CX_ENABLE_START_INDEX, CX_ENABLE_BITS)
+#define CX_GET_IV(cx_sel) \
+    GET_BITS(cx_sel, CX_IV_START_INDEX, CX_IV_BITS)
 
 // ========= cx state context status helpers ===========
 
@@ -137,10 +140,12 @@ typedef enum {
 typedef union {
     struct {
         uint cxu_id     : CX_CXU_ID_BITS;
-        uint state_id   : CX_STATE_ID_BITS;
+        uint reserved0  : 6;
         uint v_state_id : CX_VIRT_STATE_BITS;
-        uint reserved0  : 32 - CX_CXU_ID_BITS - CX_STATE_ID_BITS - CX_VIRT_STATE_BITS - CX_ENABLE_BITS;
-        uint en     : CX_ENABLE_BITS;
+        uint state_id   : CX_STATE_ID_BITS;
+        uint reserved1  : 8;
+        uint version    : 3;
+        uint iv         : 1;
     } sel;
         uint idx;
  } cx_idx_t;

@@ -53,7 +53,8 @@ static inline cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id,
     cx_idx_t cx_sel = {.sel = {   .cxu_id = cxu_id, 
                                   .state_id = state_id,
                                   .v_state_id = vstate_id,
-                                  .en = 1}};
+                                  .version = 1,
+                                  .iv = 0}};
     return cx_sel.idx;
 }
 
