@@ -38,7 +38,7 @@ typedef unsigned int uint;
 #define CX_IMM_TYPE  CUSTOM1
 #define CX_FLEX_TYPE CUSTOM2
 
-#define CX_INVALID_SELECTOR 0x10000000
+#define CX_INVALID_SELECTOR 0x80000000
 
 #define CX_HW_INIT 0
 #define CX_OS_INIT 1
