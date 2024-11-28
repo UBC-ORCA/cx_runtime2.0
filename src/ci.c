@@ -5,6 +5,11 @@
 #include "../include/ci.h"
 #include "../include/list.h"
 
+#include "../zoo/muldiv/muldiv_common.h"
+#include "../zoo/addsub/addsub_common.h"
+#include "../zoo/mulacc/mulacc_common.h"
+#include "../zoo/p-ext/p-ext_common.h"
+
 typedef struct cx_virt_data_t {
     int32_t virt_addr;
     uint32_t status;
@@ -19,7 +24,7 @@ typedef struct state_info_t {
 typedef struct cxu_info_t {
     cx_guid_t cx_guid[1];
     state_info_t state_info[MAX_NUM_STATES];
-    ;
+    int state_type;
 } cxu_info_t;
 
 // virtual selector table
@@ -56,7 +61,6 @@ static void del_virt_data(cx_virt_data_t *ptr) {
     ptr->data = NULL;
 }
 
-
 static cx_virt_data_t *get_virtual_state(state_info_t *head, int32_t virt_addr) 
 {
     cx_virt_data_t *p;
@@ -91,8 +95,9 @@ static void del_ucxt(cx_select_t sel) {
     del_virt_data(p);
 }
 
-static void ucxt_save(cx_idx_t sel) {
-    cx_virt_data_t *p = get_virtual_state(&cxu[sel.sel.cxu_id].state_info[sel.sel.state_id], sel.sel.v_state_id);
+static void ucxt_save(cxu_id_t cxu_id, cx_state_id_t state_id) {
+    cx_vstate_id_t vstate = vst[cxu_id][state_id];
+    cx_virt_data_t *p = get_virtual_state(&cxu[cxu_id].state_info[state_id], vstate);
 
     // This is where the program should trap to the OS, if the blob in the physical state context
     // is owned by a selector in another process
@@ -126,28 +131,30 @@ static void ucxt_restore(cx_idx_t sel) {
 }
 
 static void ucxt_switch(cx_idx_t new_sel) {
-    cx_idx_t prev_sel = {.idx = cx_csr_read(CX_SELECTOR_USER)};
-    if (prev_sel.idx != CX_LEGACY && 
-        prev_sel.idx != CX_INVALID_SELECTOR &&
-        vst[prev_sel.sel.cxu_id][prev_sel.sel.state_id] != -1) {
-        ucxt_save(prev_sel);
-    }
-    if (new_sel.idx != CX_LEGACY && 
-        new_sel.idx != CX_INVALID_SELECTOR) {
-        ucxt_restore(new_sel);
-        vst[new_sel.sel.cxu_id][new_sel.sel.state_id] = new_sel.sel.v_state_id;
-    }
+    printf("context switching\n");
+    ucxt_save(new_sel.sel.cxu_id, new_sel.sel.state_id);
+    ucxt_restore(new_sel);
+    vst[new_sel.sel.cxu_id][new_sel.sel.state_id] = new_sel.sel.v_state_id;
 }
 
 void inline cx_sel(cx_select_t sel) {
     cx_idx_t _sel = {.idx = sel};
-    if (vst[_sel.sel.cxu_id][_sel.sel.state_id] != _sel.sel.v_state_id) {
+    if (_sel.idx != CX_LEGACY &&
+        _sel.idx != CX_INVALID_SELECTOR &&
+        cxu[_sel.sel.cxu_id].state_type == CX_STATEFUL &&
+        vst[_sel.sel.cxu_id][_sel.sel.state_id] != -1 &&
+        vst[_sel.sel.cxu_id][_sel.sel.state_id] != _sel.sel.v_state_id) {
         ucxt_switch(_sel);
     }
     cx_csr_write(CX_SELECTOR_USER, sel);
 }
 
 static void cx_init() {
+    cxu[0].state_type = CX_STATELESS;
+    cxu[1].state_type = CX_STATELESS;
+    cxu[2].state_type = CX_STATEFUL; // mulacc
+    cxu[3].state_type = CX_STATELESS;
+
     for (int i = 0; i < NUM_CXUS; i++) {
         for (int j = 0; j < MAX_NUM_STATES; j++) {
             INIT_LIST_HEAD(&cxu[i].state_info[j].cx_virt_data);
@@ -176,6 +183,14 @@ cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select
     if (sel < 0) {
         return -1;
     }
+    cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
+    if (cxu[cxu_id].state_type == CX_STATELESS) {
+        return sel;
+    }
+    if (cxu[cxu_id].state_type == CX_UNDEFINED) {
+        printf("undefined state type\n");
+        exit(1);
+    }
     init_ucxt(sel);
     return sel;
 }
@@ -184,15 +199,18 @@ void cx_close(cx_select_t sel) {
   int cx_close_error = -1;
   asm volatile (
     "li a7, 458;        \n\t"  // syscall 458, cx_close
-    "mv a0, %0;         \n\t"  // a0-a5 are ecall args 
+    "mv a0, %0;         \n\t"  // a0-a5 are ecall args
     "ecall;             \n\t"
     "mv %1, a0;         \n\t"
     :  "=r" (cx_close_error)
     :  "r"  (sel)
-    : 
+    :
   );
   cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
   cx_state_id_t state_id = CX_GET_STATE_ID(sel);
+  if (cxu[cxu_id].state_type == CX_STATELESS) {
+    return;
+  }
   vst[cxu_id][state_id] = -1;
   del_ucxt(sel);
 //   cx_csr_write(CX_SELECTOR_USER, CX_LEGACY);
