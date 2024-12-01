@@ -56,7 +56,29 @@ static cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id,
     return cx_sel.idx;
 }
 
-static void init_virt_data(cx_virt_data_t *ptr, int32_t vaddr) {
+static int init_state(void) {
+    // This will trigger HW to write its initial status, if configured in HW.
+    CX_WRITE_STATUS(CX_INITIAL);
+
+    cxu_sctx_t status = CX_READ_STATUS();
+    uint sw_init = GET_CX_INITIALIZER(status);
+
+    // hw required to set to dirty after init, while sw does it explicitly
+    if (sw_init) {
+        int state_size = GET_CX_STATE_SIZE(status);
+        if (state_size > 1023 || state_size < 0) {
+            return -1;
+        }
+
+        for (int i = 0; i < state_size; i++) {
+            CX_WRITE_STATE(i, 0);
+        }
+        CX_WRITE_STATUS(CX_DIRTY);
+    }
+    return 0;
+}
+
+static void save_virt_data(cx_virt_data_t *ptr, int32_t vaddr) {
     ptr->data = malloc(sizeof(int) * MAX_STATE_SIZE);
     if (!ptr->data) {
         printf("Error allocating memory for state context data\n");
@@ -157,7 +179,8 @@ static void init_ucxt(cx_select_t sel) {
     }
 
     cx_csr_write(CX_SELECTOR_USER, sel);
-    init_virt_data(p, vstate_id);
+    init_state();
+    save_virt_data(p, vstate_id);
 
     if (vst[cxu_id][state_id] >= 0) {
         cx_idx_t prev_sel_idx = {.idx = prev_sel};
