@@ -119,6 +119,8 @@ typedef unsigned int uint;
 #define MAX_NUM_STATES (1 << CX_STATE_ID_BITS)
 #define MAX_NUM_CXUS   (1 << CX_CXU_ID_BITS)
 #define MAX_CF_IDS    (1 << 10)
+#define MAX_NUM_VSTATES (1 << CX_VIRT_STATE_BITS)
+#define VSTATE_WORDS (MAX_NUM_VSTATES / 32)
 
 #define MAX_STATE_SIZE 1024 // number of words in a state
 #define CX_LEGACY 0
@@ -134,7 +136,9 @@ enum CX_CS {
 
 typedef enum {
 	CX_NO_VIRT,
+    CX_INTRA_VIRT,
 	CX_INTER_VIRT,
+    CX_FULL_VIRT
 } CX_VIRT_T;
 
 typedef union {

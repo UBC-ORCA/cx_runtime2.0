@@ -28,7 +28,7 @@ typedef struct cxu_info_t {
 } cxu_info_t;
 
 // virtual selector table
-uint vst[NUM_CXUS][MAX_NUM_STATES];
+int32_t vst[NUM_CXUS][MAX_NUM_STATES];
 
 enum {
     CX_UNDEFINED,
@@ -45,12 +45,26 @@ static cxu_info_t cxu[NUM_CXUS];
 // we do a context switch
 static int8_t cxu_permission_table[MAX_NUM_CXUS * MAX_NUM_STATES];
 
+static cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id,
+                                  cx_vstate_id_t vstate_id)
+{
+    cx_idx_t cx_sel = {.sel = {   .cxu_id = cxu_id,
+                                  .state_id = state_id,
+                                  .v_state_id = vstate_id,
+                                  .version = 1,
+                                  .iv = 0}};
+    return cx_sel.idx;
+}
+
 static void init_virt_data(cx_virt_data_t *ptr, int32_t vaddr) {
     ptr->data = malloc(sizeof(int) * MAX_STATE_SIZE);
     if (!ptr->data) {
         printf("Error allocating memory for state context data\n");
     }
-    ptr->status = 0;
+    ptr->status = CX_READ_STATUS();
+    for (int i = 0; i < GET_CX_STATE_SIZE(ptr->status); i++) {
+        ptr->data[i] = CX_READ_STATE(i);
+    }
     ptr->virt_addr = vaddr;
 }
 
@@ -72,25 +86,15 @@ static cx_virt_data_t *get_virtual_state(state_info_t *head, int32_t virt_addr)
     return NULL;
 }
 
-static void init_ucxt(cx_select_t sel) {
-    cx_virt_data_t *p = malloc(sizeof(cx_virt_data_t)); 
-    if (!p) {
-        printf("Error allocating memory for state context\n");
-    }
-    cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
-    cx_state_id_t state_id = CX_GET_STATE_ID(sel);
-    cx_vstate_id_t vstate_id = CX_GET_VIRT_STATE_ID(sel);
-    
-    init_virt_data(p, vstate_id);
-    list_add(&p->v_contexts, &cxu[cxu_id].state_info[state_id].cx_virt_data);
-}
-
 static void del_ucxt(cx_select_t sel) {
     cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
     cx_state_id_t state_id = CX_GET_STATE_ID(sel);
     cx_vstate_id_t vstate_id = CX_GET_VIRT_STATE_ID(sel);
     cx_virt_data_t *p = get_virtual_state(&cxu[cxu_id].state_info[state_id], vstate_id);
-    
+    if (!p) {
+        printf("couldn't find state to free\n");
+        exit(1);
+    }
     list_del(&p->v_contexts);
     del_virt_data(p);
 }
@@ -98,11 +102,16 @@ static void del_ucxt(cx_select_t sel) {
 static void ucxt_save(cxu_id_t cxu_id, cx_state_id_t state_id) {
     cx_vstate_id_t vstate = vst[cxu_id][state_id];
     cx_virt_data_t *p = get_virtual_state(&cxu[cxu_id].state_info[state_id], vstate);
+    if (!p) {
+        printf("couldn't find state context to save; cxu: %d, state: %d, vstate: %d\n", cxu_id, state_id, vstate);
+        exit(1);
+    }
 
     // This is where the program should trap to the OS, if the blob in the physical state context
     // is owned by a selector in another process
     // The OS will save + restore, but user mode must also do a save + restore to get the 
     // correct blob in the state context (as the new blob is stored in user-land)
+    cx_csr_write(CX_SELECTOR_USER, gen_cx_sel(cxu_id, state_id, vstate));
     p->status = CX_READ_STATUS();
     cx_stctxs_t status = {.idx = p->status};
     for (int i = 0; i < status.sel.state_size; i++) {
@@ -111,17 +120,16 @@ static void ucxt_save(cxu_id_t cxu_id, cx_state_id_t state_id) {
 }
 
 static void ucxt_restore(cx_idx_t sel) {
-    if (sel.idx == CX_LEGACY || sel.idx == CX_INVALID_SELECTOR) {
-        return;
-    }
     cx_virt_data_t *p = get_virtual_state(&cxu[sel.sel.cxu_id].state_info[sel.sel.state_id], sel.sel.v_state_id);
+    if (!p) {
+        printf("couldn't find the virtual state context\n");
+    }
     cx_stctxs_t status = {.idx = p->status};
     
     if (status.sel.state_size > MAX_STATE_SIZE) {
         printf("Issue getting max state size (too large)");
         exit(1);
     }
-
     for (int i = 0; i < status.sel.state_size; i++) {
         CX_WRITE_STATE(i, p->data[i]);
     }
@@ -130,11 +138,39 @@ static void ucxt_restore(cx_idx_t sel) {
     CX_WRITE_STATUS(status);
 }
 
+static void init_ucxt(cx_select_t sel) {
+    cx_virt_data_t *p = malloc(sizeof(cx_virt_data_t));
+    if (!p) {
+        printf("Error allocating memory for state context\n");
+    }
+    cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
+    cx_state_id_t state_id = CX_GET_STATE_ID(sel);
+    cx_vstate_id_t vstate_id = CX_GET_VIRT_STATE_ID(sel);
+
+    cx_select_t prev_sel = cx_csr_read(CX_SELECTOR_USER);
+
+    // can't use cx_sel() here, because we haven't initialized the new context
+    if (vst[cxu_id][state_id] >= 0) {
+        cx_select_t vst_sel = gen_cx_sel(cxu_id, state_id, vst[cxu_id][state_id]);
+        cx_csr_write(CX_SELECTOR_USER, vst_sel);
+        ucxt_save(cxu_id, state_id);
+    }
+
+    cx_csr_write(CX_SELECTOR_USER, sel);
+    init_virt_data(p, vstate_id);
+
+    if (vst[cxu_id][state_id] >= 0) {
+        cx_idx_t prev_sel_idx = {.idx = prev_sel};
+        ucxt_restore(prev_sel_idx);
+    }
+
+    cx_csr_write(CX_SELECTOR_USER, prev_sel);
+    list_add(&p->v_contexts, &cxu[cxu_id].state_info[state_id].cx_virt_data);
+}
+
 static void ucxt_switch(cx_idx_t new_sel) {
-    printf("context switching\n");
     ucxt_save(new_sel.sel.cxu_id, new_sel.sel.state_id);
     ucxt_restore(new_sel);
-    vst[new_sel.sel.cxu_id][new_sel.sel.state_id] = new_sel.sel.v_state_id;
 }
 
 void inline cx_sel(cx_select_t sel) {
@@ -142,9 +178,14 @@ void inline cx_sel(cx_select_t sel) {
     if (_sel.idx != CX_LEGACY &&
         _sel.idx != CX_INVALID_SELECTOR &&
         cxu[_sel.sel.cxu_id].state_type == CX_STATEFUL &&
-        vst[_sel.sel.cxu_id][_sel.sel.state_id] != -1 &&
+        vst[_sel.sel.cxu_id][_sel.sel.state_id] >= 0 &&
         vst[_sel.sel.cxu_id][_sel.sel.state_id] != _sel.sel.v_state_id) {
         ucxt_switch(_sel);
+    }
+    if (_sel.idx != CX_LEGACY &&
+        _sel.idx != CX_INVALID_SELECTOR &&
+        cxu[_sel.sel.cxu_id].state_type == CX_STATEFUL) {
+        vst[_sel.sel.cxu_id][_sel.sel.state_id] = _sel.sel.v_state_id;
     }
     cx_csr_write(CX_SELECTOR_USER, sel);
 }
@@ -196,23 +237,23 @@ cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select
 }
 
 void cx_close(cx_select_t sel) {
-  int cx_close_error = -1;
-  asm volatile (
-    "li a7, 458;        \n\t"  // syscall 458, cx_close
-    "mv a0, %0;         \n\t"  // a0-a5 are ecall args
-    "ecall;             \n\t"
-    "mv %1, a0;         \n\t"
-    :  "=r" (cx_close_error)
-    :  "r"  (sel)
-    :
-  );
-  cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
-  cx_state_id_t state_id = CX_GET_STATE_ID(sel);
-  if (cxu[cxu_id].state_type == CX_STATELESS) {
-    return;
-  }
-  vst[cxu_id][state_id] = -1;
-  del_ucxt(sel);
+    int cx_close_error = -1;
+    asm volatile (
+      "li a7, 458;        \n\t"  // syscall 458, cx_close
+      "mv a0, %0;         \n\t"  // a0-a5 are ecall args
+      "ecall;             \n\t"
+      "mv %1, a0;         \n\t"
+      :  "=r" (cx_close_error)
+      :  "r"  (sel)
+      :
+    );
+    cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
+    cx_state_id_t state_id = CX_GET_STATE_ID(sel);
+    if (cxu[cxu_id].state_type == CX_STATELESS) {
+        return;
+    }
+    vst[cxu_id][state_id] = -1;
+    del_ucxt(sel);
 //   cx_csr_write(CX_SELECTOR_USER, CX_LEGACY);
 }
 

@@ -5,8 +5,6 @@
 #include "../include/ci.h"
 #include "../zoo/mulacc/mulacc.h"
 
-#define CX_SEL_TABLE_NUM_ENTRIES 1024
-
 void state_test() {
     int a = 3;
     int b = 5;
