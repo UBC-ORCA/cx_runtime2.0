@@ -11,3 +11,8 @@ __CX__ int32_t reset( int32_t a, int32_t b )
 {
     return CX_REG_HELPER(1, 0, 0);
 }
+
+__CX__ int32_t do_nothing( void ) 
+{
+    return CX_REG_HELPER(2, 0, 0);
+}

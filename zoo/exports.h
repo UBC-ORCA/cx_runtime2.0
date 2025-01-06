@@ -13,15 +13,15 @@
 
 #define CX_ERROR_NUM_FUNCS 0
 
-typedef int32_t (*(*cx_func_stub_t)) (int32_t, int32_t, int32_t);
+typedef int32_t (*(*cx_func_stub_t)) (int32_t, int32_t, cx_idx_t);
 
-extern int32_t (*cx_func_error[]) (int32_t, int32_t, int32_t);
+extern int32_t (*cx_func_error[]) (int32_t, int32_t, cx_idx_t);
 
 extern cx_func_stub_t cx_funcs[MAX_NUM_CXUS];
 
 extern int32_t num_cfs[MAX_NUM_CXUS];
 
-extern int32_t num_states[MAX_NUM_CXUS];
+extern int32_t num_states[MAX_STATE_SIZE];
 
 void cx_init_funcs( void );
 

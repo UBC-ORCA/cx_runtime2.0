@@ -22,7 +22,8 @@ qemu_objects := $(QEMU-BDIR)/exports.o
 cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o
 cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o
 
-all: qemu-libs $(LDIR)/libci.a machine
+all: qemu-libs $(LDIR)/libci.a 
+#machine
 
 qemu-libs: $(QEMU-LDIR)/libcx_index.so
 
@@ -97,6 +98,7 @@ qemu:
 	-kernel linux_cx/arch/riscv/boot/Image \
 	-initrd utils/initramfs/initramfs.cpio.gz \
 	-append "console=ttyS0"
+# -icount shift=0
 
 clean:
 	rm -rf build/

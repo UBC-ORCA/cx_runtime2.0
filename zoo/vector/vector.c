@@ -17,7 +17,7 @@ __CX__ int32_t set2( int32_t reg )
     return CX_REG_HELPER(2, reg, 0);
 }
 
-__CX__ int32_t reset( int32_t a, int32_t b ) 
+__CX__ int32_t resetv( void ) 
 {
-    return CX_REG_HELPER(3, a, b);
+    return CX_REG_HELPER(3, 0, 0);
 }

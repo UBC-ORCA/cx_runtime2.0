@@ -12,6 +12,7 @@
     #define MCX_ENABLE6       0x01E // CXU 12, STATE_ID 0-16; CXU 13, STATE_ID 0-16
     #define MCX_ENABLE7       0x01F // CXU 14, STATE_ID 0-16; CXU 15, STATE_ID 0-16    
     #define CX_SELECTOR_USER  0x011
+    #define CX_PREV_SELECTOR_USER 0x012
     #define CX_STATUS         0x801
 #else
     #define MCX_ENABLE0  0x012
@@ -25,7 +26,7 @@
     #define CX_STATUS     0x801
 #endif 
 
-#define NUM_CXUS 5
+#define NUM_CXUS 6
 
 typedef unsigned int uint;
 // #define uint unsigned
@@ -70,17 +71,18 @@ typedef unsigned int uint;
 #define CX_STATUS_START_INDEX 0
 #define CX_STATUS_BITS 2
 
-#define CX_STATE_SIZE_START_INDEX 3
-#define CX_STATE_SIZE_BITS 10
+#define CX_STATE_SIZE_START_INDEX 0
+#define CX_STATE_SIZE_BITS 16
 
-#define CX_NUM_QUEUES_START_INDEX 13
-#define CX_NUM_QUEUES_BITS 4
+#define CX_DATA_CLEAN_START_INDEX 26
+#define CX_DATA_CLEAN_BITS 2
 
-#define CX_ERROR_START_INDEX 24
-#define CX_ERROR_BITS 8
+#define CX_STATUS_VERSION_START_INDEX 28
 
-#define CX_INITIALIZER_START_INDEX 2
-#define CX_INITIALIZER_BITS 1
+#define CX_RESET_START_INDEX 31
+#define CX_RESET_BITS 1
+
+#define CX_VERSION_ID_BITS 3
 
 #define GET_BITS(cx_sel, start_bit, n) \
     ((cx_sel >> start_bit) & (((1 << n) - 1) ))
@@ -101,20 +103,17 @@ typedef unsigned int uint;
 
 // ========= cx state context status helpers ===========
 
-#define GET_CX_STATUS(cx_sel) \
-    GET_BITS(cx_sel, CX_STATUS_START_INDEX, CX_STATUS_BITS)
+#define GET_CX_STATUS_VERSION(cx_sel) \
+    GET_BITS(cx_sel, CX_STATUS_VERSION_START_INDEX, CX_VERSION_ID_BITS)
 
-#define GET_CX_INITIALIZER(cx_sel) \
-    GET_BITS(cx_sel, CX_INITIALIZER_START_INDEX, CX_INITIALIZER_BITS)
+#define GET_CX_DATA_CLEAN(cx_sel) \
+    GET_BITS(cx_sel, CX_DATA_CLEAN_START_INDEX, CX_DATA_CLEAN_BITS)
 
 #define GET_CX_STATE_SIZE(cx_sel) \
     GET_BITS(cx_sel, CX_STATE_SIZE_START_INDEX, CX_STATE_SIZE_BITS)
 
-#define GET_CX_NUM_QUEUES(cx_sel) \
-    GET_BITS(cx_sel, CX_NUM_QUEUES_START_INDEX, CX_NUM_QUEUES_BITS)
-
-#define GET_CX_ERROR(cx_sel) \
-    GET_BITS(cx_sel, CX_ERROR_START_INDEX, CX_ERROR_BITS)
+#define GET_CX_RESET(cx_sel) \
+    GET_BITS(cx_sel, CX_RESET_START_INDEX, CX_RESET_BITS)
 
 #define MAX_NUM_STATES (1 << CX_STATE_ID_BITS)
 #define MAX_NUM_CXUS   (1 << CX_CXU_ID_BITS)
@@ -129,7 +128,7 @@ typedef unsigned int uint;
 
 enum CX_CS {
     CX_OFF, 
-    CX_INITIAL, 
+    CX_PRECLEAN, 
     CX_CLEAN,
     CX_DIRTY
 };
@@ -165,12 +164,11 @@ typedef union {
 
 typedef union {
      struct {
-        uint cs          : CX_STATUS_BITS;
-        uint initializer : CX_INITIALIZER_BITS;
         uint state_size  : CX_STATE_SIZE_BITS;
-        uint num_queues  : CX_NUM_QUEUES_BITS;
-        uint reserved0   : 7;
-        uint error       : CX_ERROR_BITS;
+        uint reserved0   : 10;
+        uint dc          : CX_DATA_CLEAN_BITS;
+        uint version     : CX_VERSION_ID_BITS;
+        uint R           : CX_RESET_BITS;
      } sel;
       uint idx;
 } cx_stctxs_t;
