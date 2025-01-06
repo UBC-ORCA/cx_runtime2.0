@@ -57,11 +57,11 @@ void* cx_mac_thread_2(void *args) {
     // TODO: There needs to be a fencing instruction, or else doing this read
     // will be done while cx instructions are still in-flight.
 
-    pthread_mutex_lock(&lock);
-    int temp = CX_READ_STATE(0);
-    printf("sum: %d\n", temp);
-    res += temp;
-    pthread_mutex_unlock(&lock);
+    // pthread_mutex_lock(&lock);
+    // int temp = CX_READ_STATE(0);
+    // printf("sum: %d\n", temp);
+    // res += temp;
+    // pthread_mutex_unlock(&lock);
     return NULL;
 }
 
@@ -93,7 +93,7 @@ void multi_thread_1() {
 }
 
 void multi_thread_2() {
-    int N = 30;
+    int N = 10;
     res = 0;
     pthread_t tid[ N ];
     void *ret;

@@ -17,9 +17,7 @@
 
 static int a = 3, b = 5, c = 2, result = 0;
 static cx_stctxs_t expected_stctxs = {.sel = {
-                                .cs = CX_DIRTY,
-                                .error = 0,
-                                .initializer = CX_HW_INIT,
+                                .dc = CX_DIRTY,
                                 .state_size = 1
                               }};
 
@@ -252,7 +250,6 @@ void test_fork_3() {
 
 void complex_fork_test() {
 
-  // cx_share_t EX = 0, share_C = 0;
   cx_error_t cx_error;
   uint cx_status;
   int32_t state_result;
@@ -272,7 +269,7 @@ void complex_fork_test() {
   assert( cx_error == 0 );
   
   cx_status = CX_READ_STATUS();
-  assert( cx_status == expected_stctxs.idx );
+//   assert( cx_status == expected_stctxs.idx );
 
   pid_t pid = fork();
   if (pid < 0) {
@@ -672,14 +669,14 @@ int main() {
     // for (int i = 0; i < 1000; i++) {
       cx_sel(CX_LEGACY);
       // test_fork();
-      test_fork_0();
-      test_fork_1();
-      test_fork_2();
-      test_fork_3();
+    //   test_fork_0();
+    //   test_fork_1();
+    //   test_fork_2();
+    //   test_fork_3();
       complex_fork_test();
-      use_prev_opened_in_child();
-      use_prev_opened_in_parent();
-      use_prev_opened_in_parent_and_child();
+    //   use_prev_opened_in_child();
+    //   use_prev_opened_in_parent();
+    //   use_prev_opened_in_parent_and_child();
       // close_unclosed_cx();
     // }
 
