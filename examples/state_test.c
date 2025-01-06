@@ -30,10 +30,10 @@ void state_test() {
     cx_index = cx_csr_read(CX_SELECTOR_USER);
     assert ( cx_index == cx_sel_A0 );
     uint status = CX_READ_STATUS();
-    uint cs_status = GET_CX_STATUS(status);
+    // uint cs_status = GET_CX_STATUS(status);
     uint state_size = GET_CX_STATE_SIZE(status);
-    uint error = GET_CX_ERROR(status);
-    uint initializer_cfg = GET_CX_INITIALIZER(status);
+    // uint error = GET_CX_ERROR(status);
+    // uint initializer_cfg = GET_CX_INITIALIZER(status);
 
     /* Status should always be dirty after either a hw or sw initialization */
     // assert( cs_status == CX_DIRTY );
@@ -44,10 +44,10 @@ void state_test() {
     assert( result == 15 );
     status = CX_READ_STATUS();
 
-    cs_status = GET_CX_STATUS(status);
+    // cs_status = GET_CX_STATUS(status);
     state_size = GET_CX_STATE_SIZE(status);
-    error = GET_CX_ERROR(status);
-    initializer_cfg = GET_CX_INITIALIZER(status);
+    // error = GET_CX_ERROR(status);
+    // initializer_cfg = GET_CX_INITIALIZER(status);
     // assert( cs_status == CX_DIRTY );
     // assert( state_size == 1 );  // state size unchanged
     // assert( error == 0 );       // No error

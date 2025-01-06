@@ -14,6 +14,8 @@ riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/cx_open.c -o cx_op
 riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/state_test.c -o state -L $CX2_ROOT/build/lib/ -lci
 riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/stateless.c -o sl -L $CX2_ROOT/build/lib/ -lci
 riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/intra_virt.c -o iv -L $CX2_ROOT/build/lib/ -lci
+riscv32-unknown-linux-gnu-gcc -static `pwd`/../../../examples/threaded_test.c -o tt -L $CX2_ROOT/build/lib/ -lci -pthread
+
 
 popd
 find . -print0 | cpio --null -ov --format=newc | gzip -9 > initramfs.cpio.gz

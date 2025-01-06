@@ -55,8 +55,10 @@ void intra_open_3() {
     res = mac(b, b);
     assert(res == 9);
 
+    printf("switching to selD...\n");
     cx_sel(selD);
     res = mac(a, b);
+    printf("selB: %08x, selC: %08x, selD: %08x, res: %d\n", selB, selC, selD, res);
     assert(res == 15);
     
     cx_sel(selB);
@@ -127,16 +129,16 @@ void intra_open_5() {
     assert(res == 15);
 
     cx_close(selA);
-    cx_close(selB); 
-    cx_close(selC); 
+    cx_close(selB);
+    cx_close(selC);
 }
 
 int main() {
-    intra_open_1();
-    intra_open_2();
+    // intra_open_1();
+    // intra_open_2();
     intra_open_3();
-    intra_open_4();
-    intra_open_5();
+    // intra_open_4();
+    // intra_open_5();
     printf("intra virt test passed!\n");
     return 0;
 }

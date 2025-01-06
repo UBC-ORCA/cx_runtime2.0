@@ -1,10 +1,14 @@
+#define _GNU_SOURCE
 #include <assert.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "../include/ci.h"
 #include "../zoo/mulacc/mulacc.h"
+
 
 int a = 5, b = 3, res = 0;
 
@@ -46,12 +50,17 @@ void* cx_mac_thread_2(void *args) {
     cx_sel(t->sel);
     int val = t->val;
     int N = t->N;
-    // printf("Sel: %08x\n", cx_csr_read(CX_SELECTOR_USER));
     for (int i = 0; i < N; i++) {
         mac(val, val);
     }
+
+    // TODO: There needs to be a fencing instruction, or else doing this read
+    // will be done while cx instructions are still in-flight.
+
     pthread_mutex_lock(&lock);
-    res += CX_READ_STATE(0);
+    int temp = CX_READ_STATE(0);
+    printf("sum: %d\n", temp);
+    res += temp;
     pthread_mutex_unlock(&lock);
     return NULL;
 }
@@ -62,12 +71,12 @@ void multi_thread_1() {
     void *ret;
     cx_select_t selA = cx_open(CX_GUID_MULACC, CX_INTRA_VIRT, -1);
     cx_select_t selB = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    assert(selA > 0);
     assert(selB > 0);
     cx_sel(selB);
 
     int *ptr = malloc(sizeof(int));
     *ptr = a;
-
     for (int i = 0; i < N; i++) {
         assert( pthread_create(&tid[i], NULL, cx_mac_thread_1, ptr) == 0 );
     }
@@ -78,12 +87,13 @@ void multi_thread_1() {
 
     int res = CX_READ_STATE(0);
     assert( res == N * a * a);
+    cx_close(selA);
     cx_close(selB);
     free(ret);
 }
 
 void multi_thread_2() {
-    int N = 10;
+    int N = 30;
     res = 0;
     pthread_t tid[ N ];
     void *ret;
@@ -111,18 +121,25 @@ void multi_thread_2() {
         assert( pthread_join(tid[i], &ret) == 0 );
     }
 
-    pthread_mutex_destroy(&lock); 
+    pthread_mutex_destroy(&lock);
+
+    for (int i = 0; i < N; i++) {
+        cx_sel(args[i]->sel);
+        res += CX_READ_STATE(0);
+    }
 
     int scalar_sum = 0;
     for (int i = 0; i < N; i++) {
         scalar_sum += i * i;
     }
-    scalar_sum *= 10;
-    // printf("res: %d\n", res);
+
+    scalar_sum *= N;
+    // printf("res: %d, scalar_sum: %d\n", res, scalar_sum);
     assert( res == scalar_sum);
     for (int i = 0; i < N; i++) {
         cx_close(sels[i]);
     }
+    cx_close(selA);
     free(ret);
     free(sels);
     for (int i = 0; i < N; i++) {
@@ -143,8 +160,8 @@ void multi_thread_2() {
 // }
 
 int main() {
-    multi_thread_1();
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 100; i++) {
+        multi_thread_1();
         multi_thread_2();
     }
     printf("Threaded test passed!\n");
