@@ -3,6 +3,8 @@ Runnier, Timely-ier, Newer, Table-less, Not a Ninja Sloth
 
 Whenever using this repo, make sure to run `source settings.sh` to configure your environment.
 
+Make sure to install makeinfo before starting: `sudo apt-get install texinfo`
+
 1. run `git submodule update --init`
 
 **Run from utils directory.**
