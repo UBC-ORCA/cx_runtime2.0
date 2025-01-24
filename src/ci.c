@@ -28,7 +28,7 @@ typedef struct cxu_info_t {
 } cxu_info_t;
 
 // virtual selector table
-int32_t vst[NUM_CXUS][MAX_NUM_STATES];
+cx_select_t vst[NUM_CXUS][MAX_NUM_STATES];
 
 enum {
     CX_UNDEFINED,
@@ -139,7 +139,7 @@ static void del_ucxt(cx_select_t sel) {
 }
 
 static void ucxt_save(cxu_id_t cxu_id, cx_state_id_t state_id) {
-    cx_vstate_id_t vstate = vst[cxu_id][state_id];
+    cx_vstate_id_t vstate = CX_GET_VIRT_STATE_ID(vst[cxu_id][state_id]);
     cx_virt_data_t *p = get_virtual_state(&cxu[cxu_id].state_info[state_id], vstate);
     if (!p) {
         printf("couldn't find state context to save; cxu: %d, state: %d, vstate: %d\n", cxu_id, state_id, vstate);
@@ -189,7 +189,7 @@ static void init_ucxt(cx_select_t sel) {
     cx_select_t prev_sel = cx_csr_read(CX_SELECTOR_USER);
 
     // can't use cx_sel() here, because we haven't initialized the new context
-    if (vst[cxu_id][state_id] >= 0) {
+    if (vst[cxu_id][state_id] > 0) {
         cx_select_t vst_sel = gen_cx_sel(cxu_id, state_id, vst[cxu_id][state_id]);
         cx_csr_write(CX_SELECTOR_USER, vst_sel);
         ucxt_save(cxu_id, state_id);
@@ -200,7 +200,7 @@ static void init_ucxt(cx_select_t sel) {
     init_state(status);
     save_virt_data(p, vstate_id);
 
-    if (vst[cxu_id][state_id] >= 0) {
+    if (vst[cxu_id][state_id] > 0) {
         cx_idx_t prev_sel_idx = {.idx = prev_sel};
         ucxt_restore(prev_sel_idx);
     }
@@ -215,31 +215,22 @@ static void ucxt_switch(cx_idx_t new_sel) {
 }
 
 void inline cx_sel(cx_select_t sel) {
-    // cx_idx_t _sel = {.idx = sel};
-    // cx_idx_t prev_sel = {.idx = cx_csr_read(CX_PREV_SELECTOR_USER)};
-    // if (_sel.idx != CX_LEGACY &&
-    //     _sel.idx != CX_INVALID_SELECTOR) {
-    // //     // ucxt_switch(_sel);
-    // //     // TODO: Update the previously used selector
-    //     vst[prev_sel.sel.cxu_id][prev_sel.sel.state_id] = prev_sel.sel.v_state_id;
-    // }
-    // if (_sel.idx != CX_LEGACY &&
-    //     _sel.idx != CX_INVALID_SELECTOR &&
-    //     cxu[_sel.sel.cxu_id].state_type == CX_STATEFUL) {
-    //     vst[_sel.sel.cxu_id][_sel.sel.state_id] = _sel.sel.v_state_id;
-    // }
+    cx_idx_t new_sel = {.idx = sel};
+    cx_idx_t prev_sel = {.idx = cx_csr_read(CX_PREV_SELECTOR_USER)};
+    if (prev_sel.idx > 0) {
+        // TODO: Update the previously used selector
+        vst[prev_sel.sel.cxu_id][prev_sel.sel.state_id] = prev_sel.idx;
+    }
+    if (new_sel.idx > 0) {
+        cx_csr_write(CX_PREV_SELECTOR_USER, vst[new_sel.sel.cxu_id][new_sel.sel.state_id]);
+    }
     cx_csr_write(CX_SELECTOR_USER, sel);
 }
 
 static void cx_init() {
-    cxu[0].state_type = CX_STATELESS;
-    cxu[1].state_type = CX_STATELESS;
-    cxu[2].state_type = CX_STATEFUL; // mulacc
-    cxu[3].state_type = CX_STATELESS;
-
     for (int i = 0; i < NUM_CXUS; i++) {
         for (int j = 0; j < MAX_NUM_STATES; j++) {
-            INIT_LIST_HEAD(&cxu[i].state_info[j].cx_virt_data);
+            // INIT_LIST_HEAD(&cxu[i].state_info[j].cx_virt_data);
             vst[i][j] = -1;
         }
     }
@@ -247,12 +238,10 @@ static void cx_init() {
 
 bool initialized = false;
 cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select) {
-    // int32_t start_cnt = cx_csr_read(0xc02);
-    // if (!initialized) {
-    //     cx_init();
-    //     initialized = true;
-    // }
-    // register long sel asm("a0");
+    if (!initialized) {
+        cx_init();
+        initialized = true;
+    }
     register long a0 asm("a0") = cx_guid;
     register long a1 asm("a1") = cx_virt;
     register long a2 asm("a2") = ucx_select;
@@ -263,20 +252,6 @@ cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select
         :
     );
     int sel = a0;
-    // if (sel < 0) {
-    //     return -1;
-    // }
-    // cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
-    // if (cxu[cxu_id].state_type == CX_STATELESS) {
-    //     return sel;
-    // }
-    // if (cxu[cxu_id].state_type == CX_UNDEFINED) {
-    //     printf("undefined state type\n");
-    //     exit(1);
-    // }
-    // init_ucxt(sel);
-    // int32_t end_cnt = cx_csr_read(0xc02);
-    // printf("start: %d, end: %d, insn_cnt: %d\n", start_cnt, end_cnt, start_cnt - end_cnt);
     return sel;
 }
 
@@ -291,13 +266,9 @@ void cx_close(cx_select_t sel) {
       :  "r"  (sel)
       :
     );
-    // cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
-    // cx_state_id_t state_id = CX_GET_STATE_ID(sel);
-    // if (cxu[cxu_id].state_type == CX_STATELESS) {
-    //     return;
-    // }
-    // vst[cxu_id][state_id] = -1;
-    // del_ucxt(sel);
+    cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
+    cx_state_id_t state_id = CX_GET_STATE_ID(sel);
+    vst[cxu_id][state_id] = -1;
 //   cx_csr_write(CX_SELECTOR_USER, CX_LEGACY);
 }
 

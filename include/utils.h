@@ -150,7 +150,7 @@ typedef union {
         uint version    : 3;
         uint iv         : 1;
     } sel;
-        uint idx;
+        int idx;
  } cx_idx_t;
 
 typedef union {
@@ -170,7 +170,7 @@ typedef union {
         uint version     : CX_VERSION_ID_BITS;
         uint R           : CX_RESET_BITS;
      } sel;
-      uint idx;
+      int idx;
 } cx_stctxs_t;
 
 #define CX_REG_HELPER(cf_id, rs1, rs2)      ({           \

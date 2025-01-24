@@ -15,7 +15,8 @@
 
 #include <unistd.h> 
 
-static int a = 3, b = 5, c = 2, result = 0;
+static const int a = 3, b = 5, c = 2;
+static int result = 0;
 static cx_stctxs_t expected_stctxs = {.sel = {
                                 .dc = CX_DIRTY,
                                 .state_size = 1
@@ -269,6 +270,7 @@ void complex_fork_test() {
   assert( cx_error == 0 );
   
   cx_status = CX_READ_STATUS();
+//   printf("status: %08x\n", cx_status);
 //   assert( cx_status == expected_stctxs.idx );
 
   pid_t pid = fork();
@@ -339,8 +341,6 @@ void complex_fork_test() {
   cx_sel(CX_LEGACY);
 }
 
-
-
 void use_prev_opened_in_child() {
 
   cx_error_t cx_error;
@@ -374,6 +374,7 @@ void use_prev_opened_in_child() {
     assert( cx_sel_C1 != -1 );
     
     cx_sel(cx_sel_C0);
+
     result = mac(b, c);
     assert( result == 35 );
     result = mac(b, c);
@@ -410,6 +411,7 @@ void use_prev_opened_in_child() {
 
     cx_close(cx_sel_C4);
     cx_close(cx_sel_C5);
+
     int status;
     // Wait for child
     waitpid(pid, &status, 0);
@@ -453,6 +455,7 @@ void use_prev_opened_in_parent() {
     perror("fork fail");
     exit(1);
   } else if (pid == 0) {
+    // child
     cx_select_t cx_sel_C4 = cx_open(CX_GUID_MULDIV, CX_NO_VIRT, -1);
     cx_select_t cx_sel_C5 = cx_open(CX_GUID_ADDSUB, CX_NO_VIRT, -1);
     assert( cx_sel_C4 != -1 );
@@ -471,13 +474,12 @@ void use_prev_opened_in_parent() {
     result = add(a, b);
     assert(result == 8);
 
-    cx_close(cx_sel_C0);
     cx_close(cx_sel_C4);
     cx_close(cx_sel_C5);
-
+    cx_close(cx_sel_C0);
     exit(EXIT_SUCCESS);
   } else {
-    // child
+    // parent
     cx_select_t cx_sel_C1 = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     assert( cx_sel_C1 != -1 );
     
@@ -490,6 +492,7 @@ void use_prev_opened_in_parent() {
     assert( result == 55 );
 
     cx_sel(cx_sel_C1);
+
     result = mac(a, c);
     assert( result == 6 );
 
@@ -668,18 +671,18 @@ void close_unclosed_cx() {
 int main() {
     // for (int i = 0; i < 1000; i++) {
       cx_sel(CX_LEGACY);
-      // test_fork();
-    //   test_fork_0();
-    //   test_fork_1();
-    //   test_fork_2();
-    //   test_fork_3();
+      test_fork();
+      test_fork_0();
+      test_fork_1();
+      test_fork_2();
+      test_fork_3();
       complex_fork_test();
-    //   use_prev_opened_in_child();
-    //   use_prev_opened_in_parent();
-    //   use_prev_opened_in_parent_and_child();
-      // close_unclosed_cx();
+      use_prev_opened_in_child();
+      use_prev_opened_in_parent();
+      use_prev_opened_in_parent_and_child();
+    //   close_unclosed_cx();
     // }
 
-    printf("Context Copy Test Complete\n");
+    printf("Fork Test Complete\n");
     return 0;
 }

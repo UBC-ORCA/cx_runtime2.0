@@ -87,7 +87,7 @@ void mixed_open_1() {
 
 int main() {
     exclusive_open();
-    // inter_open();
+    inter_open();
     exclusive_open_2();
     exclusive_open_3();
     exclusive_open_4();
