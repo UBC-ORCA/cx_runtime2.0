@@ -10,7 +10,8 @@ cx_func_stub_t cx_funcs[MAX_NUM_CXUS] = {
     cx_func_mulacc, 
     cx_func_pext,
     cx_func_vector,
-    cx_func_vector
+    cx_func_vector,
+    cx_func_max
     };
 
 int32_t num_cfs[MAX_NUM_CXUS] = {
@@ -19,7 +20,8 @@ int32_t num_cfs[MAX_NUM_CXUS] = {
     CX_MULACC_NUM_FUNCS, 
     CX_PEXT_NUM_FUNCS,
     CX_VECTOR_NUM_FUNCS,
-    CX_VECTOR_NUM_FUNCS
+    CX_VECTOR_NUM_FUNCS,
+    CX_MAX_NUM_FUNCS
     };
 
 int32_t num_states[MAX_STATE_SIZE] = {
@@ -28,7 +30,8 @@ int32_t num_states[MAX_STATE_SIZE] = {
     CX_MULACC_NUM_STATES,
     CX_PEXT_NUM_STATES,
     CX_VECTOR_NUM_STATES,
-    CX_VECTOR_NUM_STATES
+    CX_VECTOR_NUM_STATES,
+    CX_MAX_NUM_STATES
 };
 
 // Fill unused functions in their arrays error

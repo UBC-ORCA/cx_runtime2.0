@@ -288,7 +288,6 @@ void complex_fork_test() {
     result = mac(b, c);
     assert( result == 10 );
     result = mac(b, c);
-    // sometimes bugs out on the result == 20
     assert( result == 20 );
     result = mac(b, c);
     assert( result == 30 );
@@ -334,7 +333,6 @@ void complex_fork_test() {
     waitpid(pid, &status, 0);
     assert(status == 0);
   }
-
   cx_sel(cx_sel_C0);
   result = mac(b, b);
   cx_close(cx_sel_C0);

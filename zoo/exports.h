@@ -9,6 +9,7 @@
 #include "mulacc/mulacc_func.h"
 #include "p-ext/p-ext_func.h"
 #include "vector/vector_func.h"
+#include "max/max_func.h"
 
 
 #define CX_ERROR_NUM_FUNCS 0
