@@ -19,7 +19,7 @@ ZOO-DIR := zoo
 cx_objects := $(BDIR)/ci.o
 cx_objects_m := $(BDIR)/ci_m.o
 qemu_objects := $(QEMU-BDIR)/exports.o
-cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o
+cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o $(BDIR)/max.o
 cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o $(QEMU-BDIR)/max_func.o
 
 all: qemu-libs $(LDIR)/libci.a 

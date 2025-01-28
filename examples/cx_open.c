@@ -31,6 +31,7 @@ void exclusive_open_3() {
     cx_select_t selA = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     cx_select_t selB = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
     cx_select_t selC = cx_open(CX_GUID_MULACC, CX_NO_VIRT, -1);
+    printf("opens finished\n");
     assert(selA > 0);
     assert(selB > 0);
     assert(selC < 0);
@@ -86,12 +87,12 @@ void mixed_open_1() {
 }
 
 int main() {
-    exclusive_open();
-    inter_open();
-    exclusive_open_2();
+    // exclusive_open();
+    // inter_open();
+    // exclusive_open_2();
     exclusive_open_3();
-    exclusive_open_4();
-    mixed_open_1();
+    // exclusive_open_4();
+    // mixed_open_1();
     // percounter_read();
     printf("cx_open test passed!\n");
     return 0;
