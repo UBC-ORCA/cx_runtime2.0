@@ -5,6 +5,8 @@
 #ifndef MAX_H
 #define MAX_H
 
-int max(int a, int b);
+__CX__ static inline int max(int a, int b) {
+    return CX_REG_HELPER(0, a, b);
+};
 
 #endif
