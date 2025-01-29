@@ -257,15 +257,14 @@ cx_select_t cx_open(cx_guid_t cx_guid, cx_virt_t cx_virt, cx_select_t ucx_select
 
 void cx_close(cx_select_t sel) {
     int cx_close_error = -1;
-    asm volatile (
-      "li a7, 458;        \n\t"  // syscall 458, cx_close
-      "mv a0, %0;         \n\t"  // a0-a5 are ecall args
-      "ecall;             \n\t"
-      "mv %1, a0;         \n\t"
-      :  "=r" (cx_close_error)
-      :  "r"  (sel)
-      :
+    register long a0 asm("a0") = sel;
+    register long syscall_id asm("a7") = 458; // cx_open
+    asm volatile ("ecall"
+        : "+r"(a0)
+        : "r"(a0), "r"(syscall_id)
+        :
     );
+    int ret = a0;
     cxu_id_t cxu_id = CX_GET_CXU_ID(sel);
     cx_state_id_t state_id = CX_GET_STATE_ID(sel);
     vst[cxu_id][state_id] = -1;
