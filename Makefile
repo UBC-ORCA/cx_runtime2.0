@@ -7,6 +7,8 @@ AR = ${RISCV}/riscv32-unknown-linux-gnu-ar
 CCX86 = gcc
 ARX86 = ar
 
+CFLAGS = -O2
+
 BDIR := build
 LDIR := $(BDIR)/lib
 SRC  := src
@@ -19,8 +21,8 @@ ZOO-DIR := zoo
 cx_objects := $(BDIR)/ci.o
 cx_objects_m := $(BDIR)/ci_m.o
 qemu_objects := $(QEMU-BDIR)/exports.o
-cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o $(BDIR)/max.o
-cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o $(QEMU-BDIR)/max_func.o
+cx_libraries := $(BDIR)/addsub.o $(BDIR)/muldiv.o $(BDIR)/mulacc.o $(BDIR)/p-ext.o $(BDIR)/vector.o $(BDIR)/max.o $(BDIR)/nn_acc.o
+cx_helpers := $(QEMU-BDIR)/addsub_func.o $(QEMU-BDIR)/muldiv_func.o $(QEMU-BDIR)/mulacc_func.o $(QEMU-BDIR)/p-ext_func.o $(QEMU-BDIR)/vector_func.o $(QEMU-BDIR)/max_func.o $(QEMU-BDIR)/nn_acc_func.o
 
 all: qemu-libs $(LDIR)/libci.a 
 #machine
@@ -60,26 +62,32 @@ $(QEMU-BDIR)/vector_func.o : $(ZOO-DIR)/vector/vector_func.c | $(QEMU-LDIR)
 $(QEMU-BDIR)/max_func.o : $(ZOO-DIR)/max/max_func.c | $(QEMU-LDIR)
 	$(CCX86) -c $< -o $@
 
+$(QEMU-BDIR)/nn_acc_func.o : $(ZOO-DIR)/nn_acc/nn_acc_func.c | $(QEMU-LDIR)
+	$(CCX86) -c $< -o $@
+
 
 ########### Building Extension Object Files ###########
 
 $(BDIR)/addsub.o: $(ZOO-DIR)/addsub/addsub.c $(ZOO-DIR)/addsub/addsub.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/muldiv.o: $(ZOO-DIR)/muldiv/muldiv.c $(ZOO-DIR)/muldiv/muldiv.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/mulacc.o: $(ZOO-DIR)/mulacc/mulacc.c $(ZOO-DIR)/mulacc/mulacc.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/p-ext.o: $(ZOO-DIR)/p-ext/p-ext.c $(ZOO-DIR)/p-ext/p-ext.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/vector.o: $(ZOO-DIR)/vector/vector.c $(ZOO-DIR)/vector/vector.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/max.o: $(ZOO-DIR)/max/max.c $(ZOO-DIR)/max/max.h | $(BDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BDIR)/nn_acc.o: $(ZOO-DIR)/nn_acc/nn_acc.c $(ZOO-DIR)/nn_acc/nn_acc.h | $(BDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR):
 	mkdir -p $(BDIR)
@@ -93,7 +101,7 @@ $(LDIR)/libci.a: $(cx_objects) $(cx_libraries) | $(LDIR)
 	$(AR) -rcs $@ $(cx_objects) $(cx_libraries)
 
 $(BDIR)/%.o : $(SRC)/%.c | $(LDIR)
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LDIR):
 	mkdir -p $(LDIR)
@@ -103,8 +111,8 @@ qemu:
 	./qemu_cx/build/qemu-system-riscv32 -nographic -machine virt \
 	-kernel linux_cx/arch/riscv/boot/Image \
 	-initrd utils/initramfs/initramfs.cpio.gz \
-	-append "console=ttyS0"
-# -icount shift=0
+	-append "console=ttyS0" \
+	-icount shift=0
 
 clean:
 	rm -rf build/
