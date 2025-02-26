@@ -3,14 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../include/ci.h"
-#include "../include/utils.h"
+#include "../include/ci_m.h"
+#include "../include/utils_m.h"
 #include "../include/list.h"
 
+#include "../zoo/max/max_common.h"
 #include "../zoo/mulacc/mulacc_common.h"
-#include "../zoo/muldiv/muldiv_common.h"
-#include "../zoo/addsub/addsub_common.h"
-#include "../zoo/p-ext/p-ext_common.h"
+#include "../zoo/nn_acc/nn_acc_common.h"
 #include "../zoo/vector/vector_common.h"
 
 #define CX_AVAIL_STATE 1
@@ -53,8 +52,7 @@ static inline cx_select_t gen_cx_sel(cxu_id_t cxu_id, cx_state_id_t state_id,
     cx_idx_t cx_sel = {.sel = {   .cxu_id = cxu_id, 
                                   .state_id = state_id,
                                   .v_state_id = vstate_id,
-                                  .version = 1,
-                                  .iv = 0}};
+                                  .version = 1}};
     return cx_sel.idx;
 }
 
@@ -129,18 +127,15 @@ void cx_init() {
     // 0 initialize the cx_status csr
     cx_csr_write(CX_STATUS, 0);
 
-    cx_map[0].cx_guid = CX_GUID_MULDIV;
-    cx_map[1].cx_guid = CX_GUID_ADDSUB;
+    cx_map[0].cx_guid = CX_GUID_VECTOR;
+    cx_map[1].cx_guid = CX_GUID_MAX;
     cx_map[2].cx_guid = CX_GUID_MULACC;
-    cx_map[3].cx_guid = CX_GUID_PEXT;
-    cx_map[4].cx_guid = CX_GUID_VECTOR;
+    cx_map[3].cx_guid = CX_GUID_NN_ACC;
 
-
-    cx_map[0].num_states = CX_MULDIV_NUM_STATES;
-    cx_map[1].num_states = CX_ADDSUB_NUM_STATES;
+    cx_map[0].num_states = CX_VECTOR_NUM_STATES;
+    cx_map[1].num_states = CX_MAX_NUM_STATES;
     cx_map[2].num_states = CX_MULACC_NUM_STATES;
-    cx_map[3].num_states = CX_PEXT_NUM_STATES;
-    cx_map[4].num_states = CX_VECTOR_NUM_STATES;
+    cx_map[3].num_states = CX_NN_ACC_NUM_STATES;
 
     for (int i = 0; i < NUM_CXUS; i++) {
         cx_map[i].avail_state_ids = malloc(cx_map[i].num_states * sizeof(int));
@@ -217,16 +212,24 @@ static void initialize_state() {
 
     uint status = CX_READ_STATUS();
     uint sw_init = GET_CX_INITIALIZER(status);
-    CX_WRITE_STATUS(CX_INITIAL);
 
-    // hw required to set to dirty after init, while sw does it explicitly
-    if (sw_init) {
-        uint size = GET_CX_STATE_SIZE(status);
-        for (int i = 0; i < size; i++) {
+    // 4. Read the state to get the state_size
+    cx_stctxs_t stat = { .idx = status };
+    uint state_size = stat.sel.state_size;
+
+    // 5. Set the CXU to initial state
+    stat.sel.cs = CX_INITIAL;
+    CX_WRITE_STATUS(stat.idx);
+
+    // With R=0, there could still be software initialization that needs
+    // to be done.
+    if (stat.sel.cs == CX_INITIAL) {
+        for (int i = 0; i < state_size; i++) {
             CX_WRITE_STATE(i, 0);
         }
-        CX_WRITE_STATUS(CX_DIRTY);
     }
+    stat.sel.cs = CX_DIRTY;
+    CX_WRITE_STATUS(stat.idx);
 }
 
 static int alloc_sel(cxu_id_t cxu_id) {
